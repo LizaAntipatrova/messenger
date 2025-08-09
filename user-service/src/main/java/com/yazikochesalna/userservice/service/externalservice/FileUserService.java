@@ -1,9 +1,8 @@
 package com.yazikochesalna.userservice.service.externalservice;
 
-import com.yazikochesalna.userservice.advice.ResourceNotFoundCustomException;
+import com.yazikochesalna.userservice.exception.ResourceNotFoundCustomException;
 import com.yazikochesalna.userservice.data.entity.Users;
 import com.yazikochesalna.userservice.data.repository.UsersRepository;
-import com.yazikochesalna.userservice.dto.notificationdto.NotificationDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

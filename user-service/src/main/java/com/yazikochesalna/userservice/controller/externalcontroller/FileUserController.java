@@ -1,11 +1,8 @@
 package com.yazikochesalna.userservice.controller.externalcontroller;
 
-import com.yazikochesalna.userservice.advice.ValidationCustomException;
-import com.yazikochesalna.userservice.data.repository.UsersRepository;
+import com.yazikochesalna.userservice.exception.ValidationCustomException;
 import com.yazikochesalna.userservice.dto.FileUpdateRequestDTO;
-import com.yazikochesalna.userservice.dto.notificationdto.EventType;
 import com.yazikochesalna.userservice.dto.notificationdto.NotificationDTO;
-import com.yazikochesalna.userservice.dto.notificationdto.impl.UserAvatarUpdatePayloadDTO;
 import com.yazikochesalna.userservice.service.externalservice.FileUserService;
 import com.yazikochesalna.userservice.service.externalservice.MessagingClientService;
 import com.yazikochesalna.userservice.service.mapper.AvatarNotificationDTOMapper;

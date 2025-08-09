@@ -4,7 +4,7 @@ import com.yazikochesalna.userservice.data.entity.Users;
 import com.yazikochesalna.userservice.data.repository.UsersRepository;
 import com.yazikochesalna.userservice.dto.PersonalProfileDTO;
 import com.yazikochesalna.userservice.dto.UserProfileDTO;
-import com.yazikochesalna.userservice.advice.ResourceNotFoundCustomException;
+import com.yazikochesalna.userservice.exception.ResourceNotFoundCustomException;
 import com.yazikochesalna.userservice.service.mapper.PersonalProfileMapper;
 import com.yazikochesalna.userservice.service.mapper.UserProfileDTOMapper;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package com.yazikochesalna.userservice.service.internalservice;
 
-import com.yazikochesalna.userservice.advice.UserAlreadyExistsCustomException;
-import com.yazikochesalna.userservice.advice.ValidationCustomException;
+import com.yazikochesalna.userservice.exception.UserAlreadyExistsCustomException;
+import com.yazikochesalna.userservice.exception.ValidationCustomException;
 import com.yazikochesalna.userservice.data.entity.Users;
 import com.yazikochesalna.userservice.data.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;

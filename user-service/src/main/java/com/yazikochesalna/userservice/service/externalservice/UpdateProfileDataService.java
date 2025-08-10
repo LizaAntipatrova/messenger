@@ -1,5 +1,6 @@
 package com.yazikochesalna.userservice.service.externalservice;
 
+import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
 import com.yazikochesalna.userservice.exception.ResourceNotFoundCustomException;
 import com.yazikochesalna.userservice.exception.UserAlreadyExistsCustomException;
 import com.yazikochesalna.userservice.data.entity.Users;
@@ -7,11 +8,14 @@ import com.yazikochesalna.userservice.data.repository.UsersRepository;
 import com.yazikochesalna.userservice.dto.updateuserdto.UpdateUserRequestDto;
 import com.yazikochesalna.userservice.dto.updateuserdto.UpdateUserResponseDto;
 import com.yazikochesalna.userservice.service.mapper.UploadUserMapper;
+import com.yazikochesalna.userservice.service.mapper.UsernameNotificationDTOMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.naming.ServiceUnavailableException;
 import java.util.Optional;
 
 @Slf4j
@@ -21,6 +25,16 @@ public class UpdateProfileDataService {
 
     private final UsersRepository usersRepository;
     private final UploadUserMapper uploadUserMapper;
+    private final MessagingClientService messagingClientService;
+
+    public void SendUsernameNotification(Long id, UpdateUserRequestDto updateDTO) throws ServiceUnavailableException {
+
+        if (updateDTO.getUsername() != null){
+            NotificationDto notification = UsernameNotificationDTOMapper.
+                    convertUpdateUserRequestDTOToNotificationDTO(id, updateDTO.getUsername());
+            messagingClientService.setNewUsername(notification);
+        }
+    }
 
     @Transactional
     public UpdateUserResponseDto updateUserProfile(Long id, UpdateUserRequestDto updateDTO) {

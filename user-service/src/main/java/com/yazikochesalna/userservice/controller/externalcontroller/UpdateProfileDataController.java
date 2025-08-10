@@ -30,11 +30,8 @@ public class UpdateProfileDataController {
 
         UpdateUserResponseDto response = updateProfileDataService.updateUserProfile(id, updateDTO);
 
-        if (updateDTO.getUsername() != null){
-            NotificationDto notification = UsernameNotificationDTOMapper.
-                    convertUpdateUserRequestDTOToNotificationDTO(id, updateDTO.getUsername());
-            messagingClientService.setNewUsername(notification);
-        }
+        updateProfileDataService.SendUsernameNotification(id, updateDTO);
+
         return ResponseEntity.ok(response);
-       }
+    }
 }

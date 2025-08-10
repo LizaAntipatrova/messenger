@@ -14,9 +14,9 @@ import java.util.UUID;
 @NoArgsConstructor
 public class FileUpdateRequestDto {
 
-    @NotNull
+    @NotNull(message = "userId must not be null")
     private Long userId;
 
-    @NotNull
+    @NotNull(message = "fileUuid must not be null")
     private UUID fileUuid;
 }

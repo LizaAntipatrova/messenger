@@ -9,6 +9,7 @@ import com.yazikochesalna.userservice.service.internalservice.AuthUserService;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,7 @@ public class AuthUserController {
     @Hidden
     public CheckUsersResponseDto checkUsersExistence(@RequestBody CheckUsersRequestDto checkUsersRequest) {
         List<Long> existingUsers = authUserService.findUsersIdsByIds(checkUsersRequest.usersIds());
+
         return new CheckUsersResponseDto(existingUsers);
     }
 
@@ -35,11 +37,9 @@ public class AuthUserController {
     @RolesAllowed("SERVICE")
     @Hidden
     public ResponseEntity<CreateUserResponseDto> createUser(
-            @RequestBody CreateUserRequestDto request) {
+            @RequestBody @Valid CreateUserRequestDto request) {
 
         Users newUser = authUserService.createUser(request.getUsername());
-
-        CreateUserResponseDto createUserResponseDTO = new CreateUserResponseDto(newUser.getId());
-        return ResponseEntity.ok(createUserResponseDTO);
+        return ResponseEntity.ok(new CreateUserResponseDto(newUser.getId()));
     }
 }

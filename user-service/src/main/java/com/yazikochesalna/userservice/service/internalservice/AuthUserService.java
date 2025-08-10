@@ -20,13 +20,6 @@ public class AuthUserService {
     }
 
     public Users createUser(String username) {
-        if (username == null || username.trim().isEmpty()) {
-            throw new ValidationCustomException("Username cannot be blank");
-        }
-
-        if (username.length() > 50) {
-            throw new ValidationCustomException("Username must be less than 50 characters");
-        }
 
         if (usersRepository.existsByUsername(username)) {
             throw new UserAlreadyExistsCustomException("Username already exists");

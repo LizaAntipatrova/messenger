@@ -1,12 +1,9 @@
 package com.yazikochesalna.userservice.controller.externalcontroller;
 
-import com.yazikochesalna.userservice.exception.ValidationCustomException;
 import com.yazikochesalna.userservice.dto.fileupdatedto.FileUpdateRequestDto;
-import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
 import com.yazikochesalna.userservice.service.externalservice.FileUserService;
-import com.yazikochesalna.userservice.service.externalservice.MessagingClientService;
-import com.yazikochesalna.userservice.service.mapper.AvatarNotificationDTOMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,24 +17,12 @@ import javax.naming.ServiceUnavailableException;
 public class FileUserController {
 
     private final FileUserService fileUserService;
-    private final MessagingClientService messagingClientService;
 
     @PatchMapping("/update-file")
     public ResponseEntity<Void> updateFileUuid(
-            @RequestBody FileUpdateRequestDto requestDTO) throws ServiceUnavailableException {
+            @RequestBody @Valid FileUpdateRequestDto requestDto) throws ServiceUnavailableException {
 
-        if (requestDTO.getUserId() == null) {
-            throw new ValidationCustomException("User id can not be null");
-        }
-        if (requestDTO.getFileUuid() == null) {
-            throw new ValidationCustomException("File uuid can not be null");
-        }
-
-        fileUserService.updateUserFileUuid(requestDTO.getUserId(), requestDTO.getFileUuid());
-
-        NotificationDto notification =
-                AvatarNotificationDTOMapper.convertFileUpdateRequestDTOToNotificationDTO(requestDTO);
-        messagingClientService.setNewAvatar(notification);
+        fileUserService.updateUserFileUuidSendNotification(requestDto);
 
         return ResponseEntity.noContent().build();
     }

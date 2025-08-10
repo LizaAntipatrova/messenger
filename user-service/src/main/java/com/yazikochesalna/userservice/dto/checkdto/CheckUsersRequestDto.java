@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record CheckUsersRequestDto(
-        @NotNull
+        @NotNull(message = "userIds must not be null")
         List<Long> usersIds
 ) {
 }

@@ -1,9 +1,11 @@
 package com.yazikochesalna.userservice.controller.internalcontroller;
 
 import com.yazikochesalna.userservice.data.entity.Users;
-import com.yazikochesalna.userservice.dto.*;
+import com.yazikochesalna.userservice.dto.checkdto.CheckUsersRequestDto;
+import com.yazikochesalna.userservice.dto.checkdto.CheckUsersResponseDto;
+import com.yazikochesalna.userservice.dto.createuserdto.CreateUserRequestDto;
+import com.yazikochesalna.userservice.dto.createuserdto.CreateUserResponseDto;
 import com.yazikochesalna.userservice.service.internalservice.AuthUserService;
-import com.yazikochesalna.userservice.service.mapper.ListIdsMapper;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.security.RolesAllowed;
@@ -24,20 +26,20 @@ public class AuthUserController {
     @PostMapping("/check")
     @RolesAllowed("SERVICE")
     @Hidden
-    public CheckUsersResponseDTO checkUsersExistence(@RequestBody CheckUsersRequestDTO checkUsersRequest) {
+    public CheckUsersResponseDto checkUsersExistence(@RequestBody CheckUsersRequestDto checkUsersRequest) {
         List<Long> existingUsers = authUserService.findUsersIdsByIds(checkUsersRequest.usersIds());
-        return new CheckUsersResponseDTO(existingUsers);
+        return new CheckUsersResponseDto(existingUsers);
     }
 
     @PostMapping
     @RolesAllowed("SERVICE")
     @Hidden
-    public ResponseEntity<CreateUserResponseDTO> createUser(
-            @RequestBody CreateUserRequestDTO request) {
+    public ResponseEntity<CreateUserResponseDto> createUser(
+            @RequestBody CreateUserRequestDto request) {
 
         Users newUser = authUserService.createUser(request.getUsername());
 
-        CreateUserResponseDTO createUserResponseDTO = new CreateUserResponseDTO(newUser.getId());
+        CreateUserResponseDto createUserResponseDTO = new CreateUserResponseDto(newUser.getId());
         return ResponseEntity.ok(createUserResponseDTO);
     }
 }

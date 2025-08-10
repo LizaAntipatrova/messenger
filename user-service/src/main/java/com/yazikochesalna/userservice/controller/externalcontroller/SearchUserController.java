@@ -1,7 +1,7 @@
 package com.yazikochesalna.userservice.controller.externalcontroller;
 
 import com.yazikochesalna.userservice.data.entity.UserElasticsearch;
-import com.yazikochesalna.userservice.dto.ElasticsearchResponseDTO;
+import com.yazikochesalna.userservice.dto.elasticsearchsearchdto.ElasticsearchDto;
 import com.yazikochesalna.userservice.service.externalservice.ElasticsearchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,13 +24,13 @@ public class SearchUserController {
 
     @GetMapping("/elasticsearch")
     @Operation(summary = "Получить пользователей по userName, фио", description = "Возвращает максимум 40 первых пользователей")
-    public ElasticsearchResponseDTO searchUsers(
+    public ElasticsearchDto searchUsers(
             @RequestParam("query")
             @NotBlank
             String query) {
         List<UserElasticsearch> findUsers = elasticsearchService.searchUsers(query);
 
-        return new ElasticsearchResponseDTO(findUsers);
+        return new ElasticsearchDto(findUsers);
     }
 
 }

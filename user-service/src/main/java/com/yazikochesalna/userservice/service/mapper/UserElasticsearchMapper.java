@@ -1,7 +1,7 @@
 //package com.yazikochesalna.userservice.service.mapper;
 //
 //import com.yazikochesalna.userservice.data.entity.UserElasticsearch;
-//import com.yazikochesalna.userservice.dto.ElasticsearchResponseDTO;
+//import com.yazikochesalna.userservice.dto.elasticsearchsearchdto.ElasticsearchResponseDTO;
 //import org.mapstruct.Mapper;
 //import org.mapstruct.factory.Mappers;
 //

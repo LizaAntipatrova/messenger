@@ -1,10 +1,10 @@
-package com.yazikochesalna.userservice.dto;
+package com.yazikochesalna.userservice.dto.checkdto;
 
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-public record CheckUsersRequestDTO(
+public record CheckUsersRequestDto(
         @NotNull
         List<Long> usersIds
 ) {

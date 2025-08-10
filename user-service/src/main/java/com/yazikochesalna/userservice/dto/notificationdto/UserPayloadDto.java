@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class UserPayloadDTO extends PayloadDTO {
+public class UserPayloadDto extends PayloadDto {
     @NotNull(message = "userId не может быть null")
     protected Long userId;
 

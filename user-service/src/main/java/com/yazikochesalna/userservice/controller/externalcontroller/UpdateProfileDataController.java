@@ -1,13 +1,12 @@
 package com.yazikochesalna.userservice.controller.externalcontroller;
 
-import com.yazikochesalna.userservice.dto.UpdateUserRequestDTO;
-import com.yazikochesalna.userservice.dto.UpdateUserResponseDTO;
-import com.yazikochesalna.userservice.dto.notificationdto.NotificationDTO;
+import com.yazikochesalna.userservice.dto.updateuserdto.UpdateUserRequestDto;
+import com.yazikochesalna.userservice.dto.updateuserdto.UpdateUserResponseDto;
+import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
 import com.yazikochesalna.userservice.service.externalservice.MessagingClientService;
 import com.yazikochesalna.userservice.service.externalservice.UpdateProfileDataService;
 import com.yazikochesalna.userservice.service.mapper.UsernameNotificationDTOMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,13 +25,13 @@ public class UpdateProfileDataController {
     @PatchMapping("/update/{id}")
     public ResponseEntity<?> updateUser(
             @PathVariable Long id,
-            @RequestBody UpdateUserRequestDTO updateDTO
+            @RequestBody UpdateUserRequestDto updateDTO
     ) throws ServiceUnavailableException {
 
-        UpdateUserResponseDTO response = updateProfileDataService.updateUserProfile(id, updateDTO);
+        UpdateUserResponseDto response = updateProfileDataService.updateUserProfile(id, updateDTO);
 
         if (updateDTO.getUsername() != null){
-            NotificationDTO notification = UsernameNotificationDTOMapper.
+            NotificationDto notification = UsernameNotificationDTOMapper.
                     convertUpdateUserRequestDTOToNotificationDTO(id, updateDTO.getUsername());
             messagingClientService.setNewUsername(notification);
         }

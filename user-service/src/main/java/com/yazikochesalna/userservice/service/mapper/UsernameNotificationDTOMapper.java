@@ -1,18 +1,18 @@
 package com.yazikochesalna.userservice.service.mapper;
 
 import com.yazikochesalna.userservice.dto.notificationdto.EventType;
-import com.yazikochesalna.userservice.dto.notificationdto.NotificationDTO;
-import com.yazikochesalna.userservice.dto.notificationdto.impl.UserUsernameUpdatePayloadDTO;
+import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
+import com.yazikochesalna.userservice.dto.notificationdto.impl.UserUsernameUpdatePayloadDto;
 
 public class UsernameNotificationDTOMapper {
 
-    public static NotificationDTO convertUpdateUserRequestDTOToNotificationDTO
+    public static NotificationDto convertUpdateUserRequestDTOToNotificationDTO
             (Long id, String username){
-        UserUsernameUpdatePayloadDTO payload = new UserUsernameUpdatePayloadDTO();
+        UserUsernameUpdatePayloadDto payload = new UserUsernameUpdatePayloadDto();
         payload.setUserId(id);
         payload.setUsername(username);
 
-        NotificationDTO notification = new NotificationDTO();
+        NotificationDto notification = new NotificationDto();
         notification.setType(EventType.NEW_USERNAME);
         notification.setPayload(payload);
 

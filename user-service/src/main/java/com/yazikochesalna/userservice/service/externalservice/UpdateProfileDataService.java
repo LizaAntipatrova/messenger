@@ -4,8 +4,8 @@ import com.yazikochesalna.userservice.exception.ResourceNotFoundCustomException;
 import com.yazikochesalna.userservice.exception.UserAlreadyExistsCustomException;
 import com.yazikochesalna.userservice.data.entity.Users;
 import com.yazikochesalna.userservice.data.repository.UsersRepository;
-import com.yazikochesalna.userservice.dto.UpdateUserRequestDTO;
-import com.yazikochesalna.userservice.dto.UpdateUserResponseDTO;
+import com.yazikochesalna.userservice.dto.updateuserdto.UpdateUserRequestDto;
+import com.yazikochesalna.userservice.dto.updateuserdto.UpdateUserResponseDto;
 import com.yazikochesalna.userservice.service.mapper.UploadUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ public class UpdateProfileDataService {
     private final UploadUserMapper uploadUserMapper;
 
     @Transactional
-    public UpdateUserResponseDTO updateUserProfile(Long id, UpdateUserRequestDTO updateDTO) {
+    public UpdateUserResponseDto updateUserProfile(Long id, UpdateUserRequestDto updateDTO) {
 
         Users user = usersRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundCustomException(
@@ -32,12 +32,12 @@ public class UpdateProfileDataService {
         updateUserFields(user, updateDTO);
         Users updatedUser = usersRepository.save(user);
 
-        UpdateUserResponseDTO response = uploadUserMapper.toUpdateUserResponseDTO(updatedUser);
+        UpdateUserResponseDto response = uploadUserMapper.toUpdateUserResponseDTO(updatedUser);
 
         return response;
     }
 
-    private void updateUserFields(Users user, UpdateUserRequestDTO updateDTO) {
+    private void updateUserFields(Users user, UpdateUserRequestDto updateDTO) {
         if (updateDTO.getUsername() != null) {
             validateUsernameUniqueness(updateDTO.getUsername(), user.getId());
             user.setUsername(updateDTO.getUsername());

@@ -1,16 +1,15 @@
-package com.yazikochesalna.userservice.dto;
+package com.yazikochesalna.userservice.dto.createuserdto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class SearchDTO {
-    private List<Long> userIds;
+public class CreateUserRequestDto {
+
+    private String username;
 }

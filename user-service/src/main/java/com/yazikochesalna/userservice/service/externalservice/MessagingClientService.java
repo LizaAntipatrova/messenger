@@ -1,8 +1,7 @@
 package com.yazikochesalna.userservice.service.externalservice;
 
 import com.yazikochesalna.common.service.JwtService;
-import com.yazikochesalna.userservice.dto.notificationdto.NotificationDTO;
-import lombok.RequiredArgsConstructor;
+import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -32,7 +31,7 @@ public class MessagingClientService {
     @Value("${webclient.timeout}")
     private Long webClientTimeout;
 
-    public void setNewAvatar(NotificationDTO notificationDTO) throws ServiceUnavailableException {
+    public void setNewAvatar(NotificationDto notificationDTO) throws ServiceUnavailableException {
         messagingWebClient.post()
                 .uri(AVATAR_MESSAGING_URL)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtService.generateServiceToken())
@@ -45,7 +44,7 @@ public class MessagingClientService {
                 .orElseThrow(() -> new ServiceUnavailableException("Failed to send avatar notification"));
     }
 
-    public void setNewUsername(NotificationDTO notificationDTO) throws ServiceUnavailableException {
+    public void setNewUsername(NotificationDto notificationDTO) throws ServiceUnavailableException {
         messagingWebClient.post()
                 .uri(USERNAME_MESSAGING_URL)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtService.generateServiceToken())

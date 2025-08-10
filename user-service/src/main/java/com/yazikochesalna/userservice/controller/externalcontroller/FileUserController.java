@@ -1,8 +1,8 @@
 package com.yazikochesalna.userservice.controller.externalcontroller;
 
 import com.yazikochesalna.userservice.exception.ValidationCustomException;
-import com.yazikochesalna.userservice.dto.FileUpdateRequestDTO;
-import com.yazikochesalna.userservice.dto.notificationdto.NotificationDTO;
+import com.yazikochesalna.userservice.dto.fileupdatedto.FileUpdateRequestDto;
+import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
 import com.yazikochesalna.userservice.service.externalservice.FileUserService;
 import com.yazikochesalna.userservice.service.externalservice.MessagingClientService;
 import com.yazikochesalna.userservice.service.mapper.AvatarNotificationDTOMapper;
@@ -24,18 +24,18 @@ public class FileUserController {
 
     @PatchMapping("/update-file")
     public ResponseEntity<Void> updateFileUuid(
-            @RequestBody FileUpdateRequestDTO requestDTO) throws ServiceUnavailableException {
+            @RequestBody FileUpdateRequestDto requestDTO) throws ServiceUnavailableException {
 
-        if (requestDTO.getUserID() == null) {
+        if (requestDTO.getUserId() == null) {
             throw new ValidationCustomException("User id can not be null");
         }
-        if (requestDTO.getFileUUID() == null) {
+        if (requestDTO.getFileUuid() == null) {
             throw new ValidationCustomException("File uuid can not be null");
         }
 
-        fileUserService.updateUserFileUuid(requestDTO.getUserID(), requestDTO.getFileUUID());
+        fileUserService.updateUserFileUuid(requestDTO.getUserId(), requestDTO.getFileUuid());
 
-        NotificationDTO notification =
+        NotificationDto notification =
                 AvatarNotificationDTOMapper.convertFileUpdateRequestDTOToNotificationDTO(requestDTO);
         messagingClientService.setNewAvatar(notification);
 

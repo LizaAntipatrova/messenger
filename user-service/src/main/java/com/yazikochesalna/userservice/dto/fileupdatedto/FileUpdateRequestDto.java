@@ -1,4 +1,4 @@
-package com.yazikochesalna.userservice.dto;
+package com.yazikochesalna.userservice.dto.fileupdatedto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -12,11 +12,11 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class FileUpdateRequestDTO {
+public class FileUpdateRequestDto {
 
     @NotNull
-    private Long userID;
+    private Long userId;
 
     @NotNull
-    private UUID fileUUID;
+    private UUID fileUuid;
 }

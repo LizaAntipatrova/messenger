@@ -2,8 +2,8 @@ package com.yazikochesalna.userservice.service.externalservice;
 
 import com.yazikochesalna.userservice.data.entity.Users;
 import com.yazikochesalna.userservice.data.repository.UsersRepository;
-import com.yazikochesalna.userservice.dto.PersonalProfileDTO;
-import com.yazikochesalna.userservice.dto.UserProfileDTO;
+import com.yazikochesalna.userservice.dto.personalprofiledto.PersonalProfileDto;
+import com.yazikochesalna.userservice.dto.UserProfileDto;
 import com.yazikochesalna.userservice.exception.ResourceNotFoundCustomException;
 import com.yazikochesalna.userservice.service.mapper.PersonalProfileMapper;
 import com.yazikochesalna.userservice.service.mapper.UserProfileDTOMapper;
@@ -21,20 +21,20 @@ public class UserProfileService {
     private final PersonalProfileMapper personalProfileMapper;
     private final UserProfileDTOMapper userProfileDTOMapper;
 
-    public UserProfileDTO findUserProfile(Long id) {
+    public UserProfileDto findUserProfile(Long id) {
         Users user = usersRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundCustomException("User not found with id: " + id));
 
         return userProfileDTOMapper.toUserProfileDTO(user);
     }
 
-    public PersonalProfileDTO findPersonalProfileDTO(Long id)
+    public PersonalProfileDto findPersonalProfileDTO(Long id)
             throws ServiceUnavailableException{
 
         Users user = findUser(id);
         String login = authorizationClientService.getUserLogin(id);
 
-        PersonalProfileDTO profileDTO = personalProfileMapper.toPersonalProfileDTO(user);
+        PersonalProfileDto profileDTO = personalProfileMapper.toPersonalProfileDTO(user);
         profileDTO.setLogin(login);
         return profileDTO;
     }

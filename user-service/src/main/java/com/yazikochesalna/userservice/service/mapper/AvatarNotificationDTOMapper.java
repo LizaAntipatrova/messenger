@@ -1,19 +1,19 @@
 package com.yazikochesalna.userservice.service.mapper;
 
-import com.yazikochesalna.userservice.dto.FileUpdateRequestDTO;
+import com.yazikochesalna.userservice.dto.fileupdatedto.FileUpdateRequestDto;
 import com.yazikochesalna.userservice.dto.notificationdto.EventType;
-import com.yazikochesalna.userservice.dto.notificationdto.NotificationDTO;
-import com.yazikochesalna.userservice.dto.notificationdto.impl.UserAvatarUpdatePayloadDTO;
+import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
+import com.yazikochesalna.userservice.dto.notificationdto.impl.UserAvatarUpdatePayloadDto;
 
 public class AvatarNotificationDTOMapper {
 
-    public static NotificationDTO convertFileUpdateRequestDTOToNotificationDTO
-            (FileUpdateRequestDTO requestDTO){
-        UserAvatarUpdatePayloadDTO payload = new UserAvatarUpdatePayloadDTO();
-        payload.setUserId(requestDTO.getUserID());
-        payload.setAvatarId(requestDTO.getFileUUID());
+    public static NotificationDto convertFileUpdateRequestDTOToNotificationDTO
+            (FileUpdateRequestDto requestDTO){
+        UserAvatarUpdatePayloadDto payload = new UserAvatarUpdatePayloadDto();
+        payload.setUserId(requestDTO.getUserId());
+        payload.setAvatarId(requestDTO.getFileUuid());
 
-        NotificationDTO notification = new NotificationDTO();
+        NotificationDto notification = new NotificationDto();
         notification.setType(EventType.NEW_USER_AVATAR);
         notification.setPayload(payload);
 

@@ -4,9 +4,9 @@ import com.yazikochesalna.userservice.dto.notificationdto.EventType;
 import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
 import com.yazikochesalna.userservice.dto.notificationdto.impl.UserUsernameUpdatePayloadDto;
 
-public class UsernameNotificationDTOMapper {
+public class UsernameNotificationDtoMapper {
 
-    public static NotificationDto convertUpdateUserRequestDTOToNotificationDTO
+    public static NotificationDto convertUpdateUserRequestDtoToNotificationDto
             (Long id, String username){
         UserUsernameUpdatePayloadDto payload = new UserUsernameUpdatePayloadDto();
         payload.setUserId(id);

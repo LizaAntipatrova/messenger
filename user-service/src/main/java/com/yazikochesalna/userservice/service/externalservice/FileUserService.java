@@ -5,7 +5,7 @@ import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
 import com.yazikochesalna.userservice.exception.ResourceNotFoundCustomException;
 import com.yazikochesalna.userservice.data.entity.Users;
 import com.yazikochesalna.userservice.data.repository.UsersRepository;
-import com.yazikochesalna.userservice.service.mapper.AvatarNotificationDTOMapper;
+import com.yazikochesalna.userservice.service.mapper.AvatarNotificationDtoMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,12 +19,12 @@ public class FileUserService {
     private final UsersRepository usersRepository;
     private final MessagingClientService messagingClientService;
 
-    public void updateUserFileUuidSendNotification( FileUpdateRequestDto requestDto) throws ServiceUnavailableException {
+    public void updateUserFileUuidSendNotification(FileUpdateRequestDto requestDto) throws ServiceUnavailableException {
 
         updateUserFileUuid(requestDto.getUserId(), requestDto.getFileUuid());
 
         NotificationDto notification =
-                AvatarNotificationDTOMapper.convertFileUpdateRequestDTOToNotificationDTO(requestDto);
+                AvatarNotificationDtoMapper.convertFileUpdateRequestDtoToNotificationDto(requestDto);
         messagingClientService.setNewAvatar(notification);
     }
 

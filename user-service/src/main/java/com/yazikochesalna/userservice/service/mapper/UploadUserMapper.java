@@ -9,5 +9,5 @@ import org.mapstruct.Mapping;
 public interface UploadUserMapper {
 
     @Mapping(target = "userId", source = "id")
-    UpdateUserResponseDto toUpdateUserResponseDTO(Users user);
+    UpdateUserResponseDto toUpdateUserResponseDto(Users user);
 }

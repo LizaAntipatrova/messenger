@@ -5,13 +5,13 @@ import com.yazikochesalna.userservice.dto.notificationdto.EventType;
 import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
 import com.yazikochesalna.userservice.dto.notificationdto.impl.UserAvatarUpdatePayloadDto;
 
-public class AvatarNotificationDTOMapper {
+public class AvatarNotificationDtoMapper {
 
-    public static NotificationDto convertFileUpdateRequestDTOToNotificationDTO
-            (FileUpdateRequestDto requestDTO){
+    public static NotificationDto convertFileUpdateRequestDtoToNotificationDto
+            (FileUpdateRequestDto requestDto){
         UserAvatarUpdatePayloadDto payload = new UserAvatarUpdatePayloadDto();
-        payload.setUserId(requestDTO.getUserId());
-        payload.setAvatarId(requestDTO.getFileUuid());
+        payload.setUserId(requestDto.getUserId());
+        payload.setAvatarId(requestDto.getFileUuid());
 
         NotificationDto notification = new NotificationDto();
         notification.setType(EventType.NEW_USER_AVATAR);

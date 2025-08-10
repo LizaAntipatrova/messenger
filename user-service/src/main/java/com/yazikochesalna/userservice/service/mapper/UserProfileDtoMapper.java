@@ -5,8 +5,8 @@ import com.yazikochesalna.userservice.dto.UserProfileDto;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
-public interface UserProfileDTOMapper {
+public interface UserProfileDtoMapper {
 
-   UserProfileDto toUserProfileDTO (Users user);
+   UserProfileDto toUserProfileDto(Users user);
 
 }

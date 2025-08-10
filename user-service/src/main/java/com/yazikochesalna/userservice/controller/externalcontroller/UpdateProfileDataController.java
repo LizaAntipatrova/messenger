@@ -2,10 +2,8 @@ package com.yazikochesalna.userservice.controller.externalcontroller;
 
 import com.yazikochesalna.userservice.dto.updateuserdto.UpdateUserRequestDto;
 import com.yazikochesalna.userservice.dto.updateuserdto.UpdateUserResponseDto;
-import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
 import com.yazikochesalna.userservice.service.externalservice.MessagingClientService;
 import com.yazikochesalna.userservice.service.externalservice.UpdateProfileDataService;
-import com.yazikochesalna.userservice.service.mapper.UsernameNotificationDTOMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,12 +23,12 @@ public class UpdateProfileDataController {
     @PatchMapping("/update/{id}")
     public ResponseEntity<?> updateUser(
             @PathVariable Long id,
-            @RequestBody UpdateUserRequestDto updateDTO
+            @RequestBody UpdateUserRequestDto updateDto
     ) throws ServiceUnavailableException {
 
-        UpdateUserResponseDto response = updateProfileDataService.updateUserProfile(id, updateDTO);
+        UpdateUserResponseDto response = updateProfileDataService.updateUserProfile(id, updateDto);
 
-        updateProfileDataService.SendUsernameNotification(id, updateDTO);
+        updateProfileDataService.SendUsernameNotification(id, updateDto);
 
         return ResponseEntity.ok(response);
     }

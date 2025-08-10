@@ -10,5 +10,5 @@ public interface PersonalProfileMapper {
 
     @Mapping(target = "login", ignore = true)
     @Mapping(target = "userId", source = "id")
-    PersonalProfileDto toPersonalProfileDTO(Users user);
+    PersonalProfileDto toPersonalProfileDto(Users user);
 }

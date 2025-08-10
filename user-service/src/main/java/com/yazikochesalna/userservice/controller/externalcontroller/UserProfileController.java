@@ -6,7 +6,6 @@ import com.yazikochesalna.userservice.dto.personalprofiledto.PersonalProfileDto;
 import com.yazikochesalna.userservice.service.externalservice.UserProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,12 +33,12 @@ public class UserProfileController {
 
     @GetMapping("/me")
     @Operation(summary = "Получить личный профиль по id из jwt", description = "Возвращает данные пользователя")
-    public ResponseEntity<PersonalProfileDto> getPersonalProfile (HttpServletRequest request)
+    public ResponseEntity<PersonalProfileDto> getPersonalProfile ()
             throws ServiceUnavailableException{
 
         Long userId = ((JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication()).getUserId();
-        PersonalProfileDto profileDTO = userProfileService.findPersonalProfileDTO(userId);
+        PersonalProfileDto profileDto = userProfileService.findPersonalProfileDto(userId);
 
-        return ResponseEntity.ok(profileDTO);
+        return ResponseEntity.ok(profileDto);
     }
 }

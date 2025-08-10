@@ -25,8 +25,8 @@ public class AuthUserController {
     @RolesAllowed("SERVICE")
     @Hidden
     public CheckUsersResponseDTO checkUsersExistence(@RequestBody CheckUsersRequestDTO checkUsersRequest) {
-        List<Users> existingUsers = authUserService.findAllByIdIn(checkUsersRequest.usersIds());
-        return new CheckUsersResponseDTO(ListIdsMapper.mapUsersToIds(existingUsers));
+        List<Long> existingUsers = authUserService.findUsersIdsByIds(checkUsersRequest.usersIds());
+        return new CheckUsersResponseDTO(existingUsers);
     }
 
     @PostMapping

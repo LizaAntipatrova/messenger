@@ -18,11 +18,8 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
 
     Optional<Users> findById (long id);
 
-    @Query("SELECT u FROM Users u WHERE u.low_username LIKE :prefix%")
-    List<Users> findUserIdsByUsernameStartingWith(@Param("prefix") String prefix,
-                                                 Pageable pageable);
-
-    List<Users> findAllByIdIn(List<Long> ids);
+    @Query("SELECT u.id FROM Users u WHERE u.id IN :ids")
+    List<Long> findIdsByIdIn(@Param("ids") List<Long> ids);
 
     boolean existsByUsername(String username);
 

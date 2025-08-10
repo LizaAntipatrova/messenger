@@ -15,8 +15,8 @@ public class AuthUserService {
 
     private final UsersRepository usersRepository;
 
-    public List<Users> findAllByIdIn(List<Long> ids) {
-        return usersRepository.findAllByIdIn(ids);
+    public List<Long> findUsersIdsByIds(List<Long> ids) {
+        return usersRepository.findIdsByIdIn(ids);
     }
 
     public Users createUser(String username) {

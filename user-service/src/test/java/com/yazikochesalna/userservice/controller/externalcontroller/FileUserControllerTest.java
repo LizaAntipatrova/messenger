@@ -2,16 +2,19 @@ package com.yazikochesalna.userservice.controller.externalcontroller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yazikochesalna.common.authentication.JwtAuthenticationToken;
 import com.yazikochesalna.common.filter.JwtFilter;
 import com.yazikochesalna.common.service.JwtService;
 import com.yazikochesalna.userservice.dto.fileupdatedto.FileUpdateRequestDto;
 import com.yazikochesalna.userservice.service.externalservice.FileUserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -29,6 +32,7 @@ class FileUserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+    private
 
     @MockBean
     private FileUserService fileUserService;
@@ -40,11 +44,17 @@ class FileUserControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    @WithMockUser
+//    @WithMockUser
     void updateFileUuid_success_shouldReturnNoContent() throws Exception {
         // Arrange
+        Long userId = 1L;
+
+        JwtAuthenticationToken authToken = Mockito.mock(JwtAuthenticationToken.class);
+        when(authToken.getUserId()).thenReturn(userId);
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+
         FileUpdateRequestDto requestDto = new FileUpdateRequestDto();
-        requestDto.setUserId(1L);
+        requestDto.setUserId(userId);
         requestDto.setFileUuid(UUID.randomUUID());
 
         doNothing().when(fileUserService).updateUserFileUuidSendNotification(any(FileUpdateRequestDto.class));
@@ -60,7 +70,7 @@ class FileUserControllerTest {
     }
 
     @Test
-    @WithMockUser
+//    @WithMockUser
     void updateFileUuid_serviceUnavailable_shouldReturnServiceUnavailable() throws Exception {
         // Arrange
         FileUpdateRequestDto requestDto = new FileUpdateRequestDto();
@@ -80,7 +90,7 @@ class FileUserControllerTest {
     }
 
     @Test
-    @WithMockUser
+//    @WithMockUser
     void updateFileUuid_invalidRequest_shouldReturnBadRequest() throws Exception {
         // Arrange
         FileUpdateRequestDto invalidRequestDto = new FileUpdateRequestDto();

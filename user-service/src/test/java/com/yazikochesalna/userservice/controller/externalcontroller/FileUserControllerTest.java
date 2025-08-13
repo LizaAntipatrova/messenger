@@ -1,30 +1,19 @@
 package com.yazikochesalna.userservice.controller.externalcontroller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yazikochesalna.common.authentication.JwtAuthenticationToken;
 import com.yazikochesalna.common.filter.JwtFilter;
-import com.yazikochesalna.common.service.JwtService;
 import com.yazikochesalna.userservice.dto.fileupdatedto.FileUpdateRequestDto;
 import com.yazikochesalna.userservice.service.externalservice.FileUserService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
-
 
 import javax.naming.ServiceUnavailableException;
 import java.util.UUID;
@@ -34,7 +23,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-//@WebMvcTest(FileUserController.class)
 @WebMvcTest(
         controllers = FileUserController.class,
         excludeAutoConfiguration = {SecurityAutoConfiguration.class, UserDetailsServiceAutoConfiguration.class},
@@ -48,7 +36,7 @@ class FileUserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean(FileUserService.class)
+    @MockitoBean
     private FileUserService fileUserService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();

@@ -1,12 +1,11 @@
 package com.yazikochesalna.userservice.controller.externalcontroller;
 
 import com.yazikochesalna.common.authentication.JwtAuthenticationToken;
-import com.yazikochesalna.userservice.dto.PersonalProfileDTO;
-import com.yazikochesalna.userservice.dto.UserProfileDTO;
+import com.yazikochesalna.userservice.dto.UserProfileDto;
+import com.yazikochesalna.userservice.dto.personalprofiledto.PersonalProfileDto;
 import com.yazikochesalna.userservice.service.externalservice.UserProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,19 +26,19 @@ public class UserProfileController {
 
     @GetMapping("/{userId}")
     @Operation(summary = "Получить пользователя по id", description = "Возвращает userName пользователя")
-    public  ResponseEntity<UserProfileDTO> getUserProfile (@PathVariable Long userId){
-        UserProfileDTO profile = userProfileService.findUserProfile(userId);
+    public  ResponseEntity<UserProfileDto> getUserProfile (@PathVariable Long userId){
+        UserProfileDto profile = userProfileService.findUserProfile(userId);
         return ResponseEntity.ok(profile);
     }
 
     @GetMapping("/me")
     @Operation(summary = "Получить личный профиль по id из jwt", description = "Возвращает данные пользователя")
-    public ResponseEntity<PersonalProfileDTO> getPersonalProfile (HttpServletRequest request)
+    public ResponseEntity<PersonalProfileDto> getPersonalProfile ()
             throws ServiceUnavailableException{
 
         Long userId = ((JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication()).getUserId();
-        PersonalProfileDTO profileDTO = userProfileService.findPersonalProfileDTO(userId);
+        PersonalProfileDto profileDto = userProfileService.findPersonalProfileDto(userId);
 
-        return ResponseEntity.ok(profileDTO);
+        return ResponseEntity.ok(profileDto);
     }
 }

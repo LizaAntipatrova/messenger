@@ -1,4 +1,4 @@
-package com.yazikochesalna.userservice.dto;
+package com.yazikochesalna.userservice.dto.personalprofiledto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,9 +12,13 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserProfileDTO {
+public class PersonalProfileDto {
+
+    private long userId;
 
     private String username;
+
+    private String login;
 
     private UUID fileUuid;
     private String lastName;
@@ -23,4 +27,5 @@ public class UserProfileDTO {
     private String phone;
     private String description;
     private LocalDate birthDate;
+
 }

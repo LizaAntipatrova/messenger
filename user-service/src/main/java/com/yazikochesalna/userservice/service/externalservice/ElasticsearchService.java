@@ -19,6 +19,9 @@ public class ElasticsearchService {
     private final UserElasticsearchRepository userElasticsearchRepository;
     private final ElasticsearchOperations elasticsearchOperations;
 
+    private static final int pageNumber = 0;
+    private static final int numberFoundUsers = 40;
+
     @Transactional
     public void indexAllUsers(List<Users> users) {
         List<UserElasticsearch> userSearches = users.stream()
@@ -49,7 +52,7 @@ public class ElasticsearchService {
 
     public List<UserElasticsearch> searchUsers(String query) {
         return userElasticsearchRepository.searchUsersLimited(
-                query, PageRequest.of(0, 40));
+                query, PageRequest.of(pageNumber, numberFoundUsers));
     }
 
     public void deleteUserFromIndex(Long id) {

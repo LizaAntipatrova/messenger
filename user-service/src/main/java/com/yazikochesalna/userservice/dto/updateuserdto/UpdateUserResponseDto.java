@@ -1,9 +1,5 @@
-package com.yazikochesalna.userservice.dto;
+package com.yazikochesalna.userservice.dto.updateuserdto;
 
-import com.yazikochesalna.userservice.data.entity.Users;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +11,7 @@ import java.time.LocalDate;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateUserResponseDTO {
+public class UpdateUserResponseDto {
 
     private Long userId;
     private String username;

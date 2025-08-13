@@ -1,4 +1,4 @@
-package com.yazikochesalna.userservice.dto;
+package com.yazikochesalna.userservice.dto.personalprofiledto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginResponseDTO {
+public class AuthLoginDto {
 
     private String login;
 }

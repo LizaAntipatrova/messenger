@@ -9,13 +9,13 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class NotificationDTO {
+public class NotificationDto {
 
     private EventType type;
 
-    protected PayloadDTO payload;
+    protected PayloadDto payload;
 
-    public <T extends PayloadDTO> T getPayload() {
+    public <T extends PayloadDto> T getPayload() {
         return (T) payload;
     }
 }

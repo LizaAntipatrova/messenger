@@ -45,9 +45,7 @@ public class UpdateProfileDataService {
         updateUserFields(user, updateDto);
         Users updatedUser = usersRepository.save(user);
 
-        UpdateUserResponseDto response = uploadUserMapper.toUpdateUserResponseDto(updatedUser);
-
-        return response;
+        return uploadUserMapper.toUpdateUserResponseDto(updatedUser);
     }
 
     private void updateUserFields(Users user, UpdateUserRequestDto updateDto) {

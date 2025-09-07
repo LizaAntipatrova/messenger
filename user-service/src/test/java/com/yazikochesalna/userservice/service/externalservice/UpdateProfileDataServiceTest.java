@@ -24,8 +24,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-// TODO не доделано
-
 @ExtendWith(MockitoExtension.class)
 class UpdateProfileDataServiceTest {
 
@@ -55,9 +53,9 @@ class UpdateProfileDataServiceTest {
         // Arrange
         UpdateUserRequestDto updateDto = new UpdateUserRequestDto();
         updateDto.setUsername("newusername");
+
         NotificationDto notification = new NotificationDto();
 
-        // Мокируем статический метод, используя Mockito
         try (var mockedStatic = mockStatic(UsernameNotificationDtoMapper.class)) {
             mockedStatic.when(() -> UsernameNotificationDtoMapper
                             .convertUpdateUserRequestDtoToNotificationDto(anyLong(), anyString()))
@@ -67,7 +65,6 @@ class UpdateProfileDataServiceTest {
             updateProfileDataService.SendUsernameNotification(testUserId, updateDto);
 
             // Assert
-            // Проверяем, что метод setNewUsername был вызван
             verify(messagingClientService, times(1)).setNewUsername(notification);
         }
     }
@@ -82,7 +79,6 @@ class UpdateProfileDataServiceTest {
         updateProfileDataService.SendUsernameNotification(testUserId, updateDto);
 
         // Assert
-        // Проверяем, что метод setNewUsername не был вызван
         verify(messagingClientService, never()).setNewUsername(any());
     }
 
@@ -93,7 +89,8 @@ class UpdateProfileDataServiceTest {
         updateDto.setUsername("newusername");
 
         try (var mockedStatic = mockStatic(UsernameNotificationDtoMapper.class)) {
-            mockedStatic.when(() -> UsernameNotificationDtoMapper.convertUpdateUserRequestDtoToNotificationDto(anyLong(), anyString()))
+            mockedStatic.when(() -> UsernameNotificationDtoMapper.convertUpdateUserRequestDtoToNotificationDto(
+                    anyLong(), anyString()))
                     .thenReturn(new NotificationDto());
 
             doThrow(new ServiceUnavailableException()).when(messagingClientService).setNewUsername(any());
@@ -119,7 +116,6 @@ class UpdateProfileDataServiceTest {
         updateDto.setDescription("Updated description");
         updateDto.setBirthDate(LocalDate.of(2000, 1, 1));
 
-
         UpdateUserResponseDto expectedResponseDto = new UpdateUserResponseDto();
 
         when(usersRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
@@ -132,8 +128,6 @@ class UpdateProfileDataServiceTest {
 
         // Assert
         assertNotNull(result);
-
-        // Проверяем, что все поля были обновлены
         assertEquals(updateDto.getUsername(), testUser.getUsername());
         assertEquals(updateDto.getFirstName(), testUser.getFirstName());
         assertEquals(updateDto.getLastName(), testUser.getLastName());
@@ -141,8 +135,6 @@ class UpdateProfileDataServiceTest {
         assertEquals(updateDto.getPhone(), testUser.getPhone());
         assertEquals(updateDto.getDescription(), testUser.getDescription());
         assertEquals(updateDto.getBirthDate(), testUser.getBirthDate());
-
-        // Проверяем, что поле low_username обновлено
         assertEquals(updateDto.getUsername().toLowerCase(), testUser.getLow_username());
 
         verify(usersRepository, times(1)).findById(testUserId);
@@ -155,7 +147,7 @@ class UpdateProfileDataServiceTest {
     void updateUserProfile_UserNotFound_ShouldThrowResourceNotFoundException() {
         // Arrange
         UpdateUserRequestDto updateDto = new UpdateUserRequestDto();
-        when(usersRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(usersRepository.findById(testUserId)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(ResourceNotFoundCustomException.class,
@@ -185,7 +177,7 @@ class UpdateProfileDataServiceTest {
     @Test
     void updateUserProfile_NoChanges_ShouldNotUpdateUser() {
         // Arrange
-        UpdateUserRequestDto updateDto = new UpdateUserRequestDto(); // DTO с пустыми полями
+        UpdateUserRequestDto updateDto = new UpdateUserRequestDto();
 
         when(usersRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
         when(usersRepository.save(any(Users.class))).thenReturn(testUser);
@@ -196,7 +188,14 @@ class UpdateProfileDataServiceTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals("oldusername", testUser.getUsername()); // Проверяем, что поле не изменилось
+        assertEquals("Oldusername", testUser.getUsername());
+        assertEquals("oldusername", testUser.getUsername().toLowerCase());
+        assertNull(testUser.getBirthDate());
+        assertNull(testUser.getDescription());
+        assertNull(testUser.getFirstName());
+        assertNull(testUser.getLastName());
+        assertNull(testUser.getMiddleName());
+        assertNull(testUser.getPhone());
 
         verify(usersRepository, times(1)).findById(testUserId);
         verify(usersRepository, times(1)).save(testUser);

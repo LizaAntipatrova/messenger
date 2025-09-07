@@ -58,7 +58,8 @@ class FileUserServiceTest {
 
         // Assert
         verify(usersRepository, times(1)).findById(requestDto.getUserId());
-        verify(usersRepository, times(1)).updateFileUuid(requestDto.getUserId(), requestDto.getFileUuid());
+        verify(usersRepository, times(1)).updateFileUuid(requestDto.getUserId(),
+                requestDto.getFileUuid());
         verify(messagingClientService, times(1)).setNewAvatar(any(NotificationDto.class));
     }
 

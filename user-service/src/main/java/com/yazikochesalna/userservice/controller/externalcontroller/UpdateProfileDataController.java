@@ -18,7 +18,7 @@ import javax.naming.ServiceUnavailableException;
 public class UpdateProfileDataController {
 
    private final UpdateProfileDataService updateProfileDataService;
-   private final MessagingClientService messagingClientService;
+//   private final MessagingClientService messagingClientService;
 
     @PatchMapping("/update/{id}")
     public ResponseEntity<?> updateUser(

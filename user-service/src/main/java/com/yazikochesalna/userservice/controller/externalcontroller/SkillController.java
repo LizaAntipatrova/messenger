@@ -1,7 +1,8 @@
 package com.yazikochesalna.userservice.controller.externalcontroller;
 
 import com.yazikochesalna.userservice.dto.personalprofiledto.SkillDto;
-import com.yazikochesalna.userservice.service.SkillService;
+
+import com.yazikochesalna.userservice.service.externalservice.SkillService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

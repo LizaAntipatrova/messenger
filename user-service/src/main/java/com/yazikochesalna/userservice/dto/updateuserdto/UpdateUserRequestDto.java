@@ -1,5 +1,6 @@
 package com.yazikochesalna.userservice.dto.updateuserdto;
 
+import com.yazikochesalna.userservice.dto.personalprofiledto.SkillDto;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Setter
 @Getter
@@ -31,8 +33,15 @@ public class UpdateUserRequestDto {
     @Pattern(regexp = "^\\+?[0-9\\s\\-()]{7,20}$", message = "Phone number is invalid")
     private String phone;
 
+    @Size(max = 100, message = "Specialization must be less than 100 characters")
+    private String specialization;
+
+    private Integer experience;
+
     private String description;
 
     @Past(message = "Birth date must be in the past")
     private LocalDate birthDate;
+
+    private Set<Long> skills;
 }

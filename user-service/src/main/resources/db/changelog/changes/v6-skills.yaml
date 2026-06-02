@@ -1,0 +1,90 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: irina
+      changes:
+        # Основной стек проекта и Backend
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Java" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Spring Boot" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "PostgreSQL" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Apache Kafka" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Docker" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Debezium" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Micronaut" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Kotlin" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Hibernate / JPA" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Liquibase" }
+
+        # Frontend & Mobile
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Thymeleaf" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "JavaScript" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "TypeScript" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "React" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Vue.js" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Swift" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Android SDK" }
+
+        # DevOps & Data Engineering
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "CI/CD" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "OpenSearch / Elasticsearch" }
+        - insert:
+            tableName: skill
+            columns:
+              - column: { name: name, value: "Python" }

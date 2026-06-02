@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.UUID;
 
 @Setter
@@ -27,5 +28,9 @@ public class PersonalProfileDto {
     private String phone;
     private String description;
     private LocalDate birthDate;
+
+    private String specialization;
+    private Integer experience;
+    private Set<SkillDto> skills;
 
 }

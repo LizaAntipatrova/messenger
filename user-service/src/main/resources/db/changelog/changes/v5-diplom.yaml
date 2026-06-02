@@ -1,0 +1,62 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4
+      author: irina
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: specialization
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: true
+                  remarks: "Основная профессиональная IT-специализация исполнителя"
+              - column:
+                  name: experience
+                  type: INT
+                  constraints:
+                    nullable: true
+                  remarks: "Практический стаж работы специалиста"
+        - createTable:
+            tableName: skill
+            columns:
+              - column:
+                  name: id
+                  type: SERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(1024)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+        - createTable:
+            tableName: users_skills
+            columns:
+              - column:
+                  name: user_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_users_skills_user
+                    referencedTableName: users
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: skill_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_users_skills_skill
+                    referencedTableName: skill
+                    referencedColumnNames: id
+                    deleteCascade: true
+
+        - addPrimaryKey:
+            tableName: users_skills
+            columnNames: user_id, skill_id
+            constraintName: pk_users_skills

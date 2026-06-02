@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres-chat:
     image: postgres:latest
@@ -24,7 +22,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: 1234
     volumes:
-      - postgres-user-data:/var/lib/postgresql/data
+      - postgres-user-data:/var/lib/postgresql
 
 
   postgres-auth:
@@ -37,7 +35,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: 1234
     volumes:
-      - postgres-auth-data:/var/lib/postgresql/data
+      - postgres-auth-data:/var/lib/postgresql
 #    healthcheck:
 #      test: ["CMD-SHELL", "pg_isready -U analytics_user -d analyticsdb"]
 #      interval: 5s
@@ -45,7 +43,7 @@ services:
 #      retries: 5
 
   cassandra-messages:
-    image: bitnami/cassandra:latest
+    image: bitnami/cassandra:4.1
     container_name: cassandra_db
     ports:
       - "9042:9042"

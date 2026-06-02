@@ -1,5 +1,7 @@
 package com.yazikochesalna.userservice.service.externalservice;
 
+import com.yazikochesalna.userservice.data.entity.Skill;
+import com.yazikochesalna.userservice.data.repository.SkillRepository;
 import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
 import com.yazikochesalna.userservice.exception.ResourceNotFoundCustomException;
 import com.yazikochesalna.userservice.exception.UserAlreadyExistsCustomException;
@@ -25,6 +27,7 @@ public class UpdateProfileDataService {
     private final UsersRepository usersRepository;
     private final UploadUserMapper uploadUserMapper;
     private final MessagingClientService messagingClientService;
+    private final SkillRepository skillRepository;
 
     public void SendUsernameNotification(Long id, UpdateUserRequestDto updateDto) throws ServiceUnavailableException {
 
@@ -43,6 +46,7 @@ public class UpdateProfileDataService {
                         String.format("Пользователь с %d не найден", id)));
 
         updateUserFields(user, updateDto);
+        updateUserSkills(user, updateDto);
         Users updatedUser = usersRepository.save(user);
 
         return uploadUserMapper.toUpdateUserResponseDto(updatedUser);
@@ -60,6 +64,28 @@ public class UpdateProfileDataService {
         Optional.ofNullable(updateDto.getPhone()).ifPresent(user::setPhone);
         Optional.ofNullable(updateDto.getDescription()).ifPresent(user::setDescription);
         Optional.ofNullable(updateDto.getBirthDate()).ifPresent(user::setBirthDate);
+
+        Optional.ofNullable(updateDto.getSpecialization()).ifPresent(user::setSpecialization);
+        Optional.ofNullable(updateDto.getExperience()).ifPresent(user::setExperience);
+    }
+
+    private void updateUserSkills(Users user, UpdateUserRequestDto updateDto) {
+        if (updateDto.getSkills() == null) {
+            return;
+        }
+
+        // Изчистваме старите връзки в колекцията
+        user.getSkills().clear();
+
+        // Обхождаме сета от ID-та и намираме съответните управлявани субекти (Skill) от базата
+        updateDto.getSkills().forEach(skillId -> {
+            if (skillId != null) {
+                Skill skill = skillRepository.findById(skillId)
+                        .orElseThrow(() -> new ResourceNotFoundCustomException(
+                                String.format("Навык с id %d не найден в справочнике", skillId)));
+                user.getSkills().add(skill);
+            }
+        });
     }
 
     private void validateUsernameUniqueness(String username, Long userId) {

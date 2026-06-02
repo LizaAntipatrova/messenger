@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -59,11 +61,26 @@ public class Users {
     @Pattern(regexp = phoneRegular, message = "Phone number is invalid")
     private String phone;
 
-    @Column(name = "description")
-    private String description;
-
     @Column(name = "birth_date")
     @Past(message = "Birth date must be in the past")
     private LocalDate birthDate;
+
+    @Column(name = "specialization", length = 100)
+    @Size(max = 100, message = "Specialization must be less than 100 characters")
+    private String specialization;
+
+    @Column(name = "experience")
+    private Integer experience;
+
+    @Column(name = "description")
+    private String description;
+
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "users_skills",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "skill_id")
+    )
+    private Set<Skill> skills = new HashSet<>();
 
 }

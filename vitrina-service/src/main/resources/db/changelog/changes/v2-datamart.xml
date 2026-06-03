@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="4" author="Irina">
+        <comment>Создание материализованного представления</comment>
+
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE MATERIALIZED VIEW mv_user_analytics AS
+            SELECT
+                u.id_natural_user AS id_natural_user,
+                COALESCE(AVG(t.experience), 0.0)::real AS prefered_complexity,
+                    u.top_task_category AS top_task_category,
+                COALESCE(SUM(t.duration), 0.0)::real AS task_experience_hours,
+                    MAX(d.full_date) AS last_activity_date,
+                COALESCE(AVG(t.budget), 0.0)::real AS average_payment
+            FROM fact_user f
+                     JOIN d_user u ON f.user_key = u.user_key
+                     JOIN d_task t ON f.task_key = t.task_key
+                     JOIN d_date d ON f.date_key = d.date_key
+            GROUP BY u.id_natural_user, u.top_task_category;
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql" endDelimiter=";">
+                DROP MATERIALIZED VIEW IF EXISTS mv_user_analytics;
+            </sql>
+        </rollback>
+
+        <createIndex indexName="idx_mv_user_analytics_id"
+                     tableName="mv_user_analytics"
+                     unique="true">
+            <column name="id_natural_user"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

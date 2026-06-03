@@ -12,4 +12,5 @@ include(":messaging-service")
 include (":authorization-service")
 include (":file-service")
 include (":user-data-collection-service")
+include (":vitrina-service")
 

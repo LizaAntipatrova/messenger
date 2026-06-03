@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="1" author="Irina">
+
+        <createTable tableName="d_date">
+            <column name="date_key" type="serial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="full_date" type="date"/>
+            <column name="day_of_week" type="smallint"/>
+            <column name="month_number" type="smallint"/>
+        </createTable>
+
+        <createTable tableName="d_skill">
+            <column name="skill_key" type="serial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="skill_name" type="varchar(1024)"/>
+        </createTable>
+
+        <createTable tableName="d_user">
+            <column name="user_key" type="serial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="id_natural_user" type="integer"/>
+            <column name="username" type="varchar(50)"/>
+            <column name="full_name" type="varchar(150)"/>
+            <column name="birth_date" type="date"/>
+            <column name="specialization" type="varchar(50)"/>
+            <column name="experience" type="real"/>
+            <column name="prefered_complexity" type="real"/>
+            <column name="top_task_category" type="integer[]"/>
+        </createTable>
+
+        <createTable tableName="d_task">
+            <column name="task_key" type="serial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="id_natural_task" type="integer"/>
+            <column name="budget" type="real"/>
+            <column name="experience" type="real"/>
+            <column name="category_id" type="integer"/>
+            <column name="start_date" type="date"/>
+            <column name="duration" type="real"/>
+        </createTable>
+
+    </changeSet>
+
+    <changeSet id="2" author="Irina">
+        <createTable tableName="fact_user">
+            <column name="id_fact" type="serial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_key" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="task_key" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_key" type="integer">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="fact_user" baseColumnNames="user_key"
+                                 constraintName="fk_fact_user_d_user"
+                                 referencedTableName="d_user" referencedColumnNames="user_key"/>
+
+        <addForeignKeyConstraint baseTableName="fact_user" baseColumnNames="task_key"
+                                 constraintName="fk_fact_user_d_task"
+                                 referencedTableName="d_task" referencedColumnNames="task_key"/>
+
+        <addForeignKeyConstraint baseTableName="fact_user" baseColumnNames="date_key"
+                                 constraintName="fk_fact_user_d_date"
+                                 referencedTableName="d_date" referencedColumnNames="date_key"/>
+    </changeSet>
+
+    <changeSet id="3" author="Irina">
+
+        <createTable tableName="link_user_skill">
+            <column name="user_key" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="skill_key" type="integer">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="link_user_skill" columnNames="user_key, skill_key"
+                       constraintName="pk_link_user_skill"/>
+
+        <addForeignKeyConstraint baseTableName="link_user_skill" baseColumnNames="user_key"
+                                 constraintName="fk_link_user_skill_user"
+                                 referencedTableName="d_user" referencedColumnNames="user_key"/>
+
+        <addForeignKeyConstraint baseTableName="link_user_skill" baseColumnNames="skill_key"
+                                 constraintName="fk_link_user_skill_skill"
+                                 referencedTableName="d_skill" referencedColumnNames="skill_key"/>
+
+
+        <createTable tableName="link_task_skill">
+            <column name="task_key" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="skill_key" type="integer">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="link_task_skill" columnNames="task_key, skill_key"
+                       constraintName="pk_link_task_skill"/>
+
+        <addForeignKeyConstraint baseTableName="link_task_skill" baseColumnNames="task_key"
+                                 constraintName="fk_link_task_skill_task"
+                                 referencedTableName="d_task" referencedColumnNames="task_key"/>
+
+        <addForeignKeyConstraint baseTableName="link_task_skill" baseColumnNames="skill_key"
+                                 constraintName="fk_link_task_skill_skill"
+                                 referencedTableName="d_skill" referencedColumnNames="skill_key"/>
+
+    </changeSet>
+
+</databaseChangeLog>

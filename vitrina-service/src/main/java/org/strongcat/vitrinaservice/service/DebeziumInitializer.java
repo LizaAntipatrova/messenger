@@ -4,7 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -26,41 +30,39 @@ public class DebeziumInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        log.info("CDC: Проверка статуса коннектора Debezium...");
+        log.info("CDC: checking Debezium connector status...");
         String connectorUrl = debeziumApiUrl + "/" + connectorName;
 
         try {
             ResponseEntity<String> response = restTemplate.getForEntity(connectorUrl, String.class);
             if (response.getStatusCode() == HttpStatus.OK) {
-                log.info("CDC: Коннектор '{}' уже зарегистрирован в Debezium. Повторная настройка не требуется.",
-                        connectorName);
+                log.info("CDC: connector '{}' already exists, updating config.", connectorName);
+                updateConnectorConfig();
                 return;
             }
         } catch (HttpClientErrorException.NotFound e) {
-            log.info("CDC: Коннектор '{}' не найден. Инициализация регистрации...", connectorName);
+            log.info("CDC: connector '{}' not found, registering it.", connectorName);
             registerConnector();
         } catch (Exception e) {
-            log.error("CDC: Не удалось связаться с Debezium API на порту 8090.", e);
+            log.error("CDC: failed to contact Debezium API.", e);
+        }
+    }
+
+    private void updateConnectorConfig() {
+        String connectorConfigUrl = debeziumApiUrl + "/" + connectorName + "/config";
+
+        try {
+            restTemplate.put(connectorConfigUrl, createConnectorConfig());
+            log.info("CDC: connector '{}' config updated.", connectorName);
+        } catch (Exception e) {
+            log.error("CDC: failed to update Debezium connector config.", e);
         }
     }
 
     private void registerConnector() {
-        Map<String, Object> config = Map.of(
-            "connector.class", "io.debezium.connector.postgresql.PostgresConnector",
-            "tasks.max", "1",
-            "plugin.name", "pgoutput",
-            "database.hostname", "postgres-users",
-            "database.port", "5432",
-            "database.user", "db_admin",
-            "database.password", "1234",
-            "database.dbname", "users_db",
-            "database.topic.prefix", "cdc",
-            "table.include.list", "public.users"
-        );
-
         Map<String, Object> requestBody = Map.of(
-            "name", connectorName,
-            "config", config
+                "name", connectorName,
+                "config", createConnectorConfig()
         );
 
         HttpHeaders headers = new HttpHeaders();
@@ -70,11 +72,26 @@ public class DebeziumInitializer implements CommandLineRunner {
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(debeziumApiUrl, entity, String.class);
             if (response.getStatusCode() == HttpStatus.CREATED || response.getStatusCode() == HttpStatus.OK) {
-                log.info("CDC: Коннектор Debezium '{}' успешно зарегистрирован",
-                        connectorName);
+                log.info("CDC: Debezium connector '{}' registered.", connectorName);
             }
         } catch (Exception e) {
-            log.error("CDC: Ошибка при отправке запроса на регистрацию коннектора в Debezium!", e);
+            log.error("CDC: failed to register Debezium connector.", e);
         }
+    }
+
+    private Map<String, Object> createConnectorConfig() {
+        return Map.ofEntries(
+                Map.entry("connector.class", "io.debezium.connector.postgresql.PostgresConnector"),
+                Map.entry("tasks.max", "1"),
+                Map.entry("plugin.name", "pgoutput"),
+                Map.entry("database.hostname", "postgres-users"),
+                Map.entry("database.port", "5432"),
+                Map.entry("database.user", "user"),
+                Map.entry("database.password", "1234"),
+                Map.entry("database.dbname", "userdatabase"),
+                Map.entry("topic.prefix", "cdc"),
+                Map.entry("database.history.kafka.bootstrap.servers", "kafka_message_storage:29092"),
+                Map.entry("table.include.list", "public.users,public.skill,public.users_skills")
+        );
     }
 }

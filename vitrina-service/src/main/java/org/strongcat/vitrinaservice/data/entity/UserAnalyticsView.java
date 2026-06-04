@@ -24,7 +24,6 @@ public class UserAnalyticsView {
     @Column(name = "prefered_complexity")
     private Float preferedComplexity;
 
-    // Используем библиотеку hypersistence-utils для корректного маппинга массива integer[] из PostgreSQL
     @Type(IntArrayType.class)
     @Column(name = "top_task_category", columnDefinition = "integer[]")
     private int[] topTaskCategory;

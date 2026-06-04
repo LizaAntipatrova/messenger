@@ -10,8 +10,14 @@ public class DebeziumUserPayloadDto {
     private Long id;
     private String username;
     
-    @JsonProperty("full_name")
-    private String fullName;
+    @JsonProperty("last_name")
+    private String lastName;
+
+    @JsonProperty("first_name")
+    private String firstName;
+
+    @JsonProperty("middle_name")
+    private String middleName;
     
     @JsonProperty("birth_date")
     private Long birthDateDays; 

@@ -12,7 +12,6 @@ import lombok.*;
 public class SkillDimension {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "skill_key")
     private Long skillKey;
 

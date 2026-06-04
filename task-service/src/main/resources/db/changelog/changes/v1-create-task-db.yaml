@@ -1,0 +1,352 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: admin
+      changes:
+        - createTable:
+            tableName: skill_group
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(1024)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+
+        - createTable:
+            tableName: request_status
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(1024)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+
+        - createTable:
+            tableName: response_status
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(1024)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+
+        - createTable:
+            tableName: specialization
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(1024)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+  - changeSet:
+      id: 2
+      author: admin
+      changes:
+        - createTable:
+            tableName: skill
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: skill_group_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_skill_skill_group
+                    referencedTableName: skill_group
+                    referencedColumnNames: id
+              - column:
+                  name: name
+                  type: varchar(1024)
+                  constraints:
+                    nullable: false
+
+
+        - createTable:
+            tableName: specialist
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: external_user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: specialization_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_specialist_specialization
+                    referencedTableName: specialization
+                    referencedColumnNames: id
+              - column:
+                  name: experience_months
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: min_payment
+                  type: decimal
+                  constraints:
+                    nullable: false
+              - column:
+                  name: avg_task_cost
+                  type: decimal
+                  constraints:
+                    nullable: true
+              - column:
+                  name: last_activity_at
+                  type: timestamp
+                  constraints:
+                    nullable: true
+              - column:
+                  name: preferred_difficulty_months
+                  type: integer
+                  constraints:
+                    nullable: true
+
+
+        - createTable:
+            tableName: request
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: initiator_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: specialization_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_request_specialization
+                    referencedTableName: specialization
+                    referencedColumnNames: id
+              - column:
+                  name: description
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: required_experience
+                  type: integer
+                  constraints:
+                    nullable: true
+              - column:
+                  name: payment
+                  type: decimal
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expected_duration_days
+                  type: bigint
+                  constraints:
+                    nullable: true
+              - column:
+                  name: request_status_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_request_request_status
+                    referencedTableName: request_status
+                    referencedColumnNames: id
+
+  - changeSet:
+      id: 3
+      author: admin
+      changes:
+        - createTable:
+            tableName: specialist_skill
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: skill_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_spec_skill_skill
+                    referencedTableName: skill
+                    referencedColumnNames: id
+              - column:
+                  name: specialist_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_spec_skill_specialist
+                    referencedTableName: specialist
+                    referencedColumnNames: id
+              - column:
+                  name: skill_weight
+                  type: decimal
+                  constraints:
+                    nullable: false
+
+
+        - createTable:
+            tableName: request_skill
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: request_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_req_skill_request
+                    referencedTableName: request
+                    referencedColumnNames: id
+              - column:
+                  name: skill_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_req_skill_skill
+                    referencedTableName: skill
+                    referencedColumnNames: id
+              - column:
+                  name: skill_weight
+                  type: decimal
+                  constraints:
+                    nullable: false
+
+
+        - createTable:
+            tableName: request_recipient
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: request_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_recipient_request
+                    referencedTableName: request
+                    referencedColumnNames: id
+              - column:
+                  name: specialist_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_recipient_specialist
+                    referencedTableName: specialist
+                    referencedColumnNames: id
+              - column:
+                  name: cosine_similarity
+                  type: decimal
+                  constraints:
+                    nullable: false
+              - column:
+                  name: correction_coefficient
+                  type: decimal
+                  constraints:
+                    nullable: false
+              - column:
+                  name: final_score
+                  type: decimal
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rank_position
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: response_status_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_recipient_response_status
+                    referencedTableName: response_status
+                    referencedColumnNames: id
+              - column:
+                  name: sent_at
+                  type: timestamp
+                  constraints:
+                    nullable: true
+              - column:
+                  name: responded_at
+                  type: timestamp
+                  constraints:
+                    nullable: true
+              - column:
+                  name: external_message_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+              - column:
+                  name: external_chat_id
+                  type: bigint
+                  constraints:
+                    nullable: true

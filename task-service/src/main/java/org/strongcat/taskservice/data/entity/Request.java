@@ -23,7 +23,7 @@ public class Request {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "specialization_id", nullable = false)
-    private Specialization specializationId;
+    private Specialization specialization;
 
     @Column(name = "description", columnDefinition = "text", nullable = false)
     private String description;

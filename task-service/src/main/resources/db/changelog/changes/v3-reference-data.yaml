@@ -1,0 +1,79 @@
+databaseChangeLog:
+  - changeSet:
+      id: 6
+      author: irina
+      changes:
+        - insert:
+            tableName: request_status
+            columns:
+              - column: { name: name, value: "CREATED" }
+        - insert:
+            tableName: request_status
+            columns:
+              - column: { name: name, value: "ANALYZING" }
+        - insert:
+            tableName: request_status
+            columns:
+              - column: { name: name, value: "ADDRESSED" }
+        - insert:
+            tableName: request_status
+            columns:
+              - column: { name: name, value: "NO_CANDIDATES" }
+        - insert:
+            tableName: request_status
+            columns:
+              - column: { name: name, value: "COMPLETED" }
+        - insert:
+            tableName: request_status
+            columns:
+              - column: { name: name, value: "CANCELLED" }
+        - insert:
+            tableName: request_status
+            columns:
+              - column: { name: name, value: "FAILED" }
+
+        - insert:
+            tableName: response_status
+            columns:
+              - column: { name: name, value: "PENDING" }
+        - insert:
+            tableName: response_status
+            columns:
+              - column: { name: name, value: "SENT" }
+        - insert:
+            tableName: response_status
+            columns:
+              - column: { name: name, value: "ACCEPTED" }
+        - insert:
+            tableName: response_status
+            columns:
+              - column: { name: name, value: "DECLINED" }
+        - insert:
+            tableName: response_status
+            columns:
+              - column: { name: name, value: "EXPIRED" }
+
+        - insert:
+            tableName: specialization
+            columns:
+              - column: { name: name, value: "Backend" }
+        - insert:
+            tableName: specialization
+            columns:
+              - column: { name: name, value: "Frontend" }
+        - insert:
+            tableName: specialization
+            columns:
+              - column: { name: name, value: "Mobile" }
+        - insert:
+            tableName: specialization
+            columns:
+              - column: { name: name, value: "DevOps" }
+        - insert:
+            tableName: specialization
+            columns:
+              - column: { name: name, value: "Data Engineering" }
+        - insert:
+            tableName: specialization
+            columns:
+              - column: { name: name, value: "QA" }

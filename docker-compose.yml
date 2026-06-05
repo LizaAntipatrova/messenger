@@ -55,6 +55,19 @@ services:
     volumes:
       - postgres-datamart-data:/var/lib/postgresql
 
+  postgres-task:
+    image: postgres:latest
+    container_name: task-database
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_DB: task-database
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 1234
+    command: [ "postgres", "-c", "wal_level=logical", "-c", "max_wal_senders=4", "-c", "max_replication_slots=4" ]
+    volumes:
+      - postgres-task-data:/var/lib/postgresql
+
   cassandra-messages:
     image: bitnami/cassandra:4.1
     container_name: cassandra_db
@@ -203,6 +216,7 @@ volumes:
   postgres-user-data:
   postgres-auth-data:
   postgres-datamart-data:
+  postgres-task-data:
   redis-websocket-tokens:
   kafka-message-storage:
   cassandra-messages-data:

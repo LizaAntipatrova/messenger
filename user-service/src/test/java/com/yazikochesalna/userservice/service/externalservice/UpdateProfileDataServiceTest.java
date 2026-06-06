@@ -1,6 +1,8 @@
 package com.yazikochesalna.userservice.service.externalservice;
 
+import com.yazikochesalna.userservice.data.entity.Skill;
 import com.yazikochesalna.userservice.data.entity.Users;
+import com.yazikochesalna.userservice.data.repository.SkillRepository;
 import com.yazikochesalna.userservice.data.repository.UsersRepository;
 import com.yazikochesalna.userservice.dto.notificationdto.NotificationDto;
 import com.yazikochesalna.userservice.dto.updateuserdto.UpdateUserRequestDto;
@@ -33,6 +35,10 @@ class UpdateProfileDataServiceTest {
     private UploadUserMapper uploadUserMapper;
     @Mock
     private MessagingClientService messagingClientService;
+    @Mock
+    private TaskServiceClientService taskServiceClientService;
+    @Mock
+    private SkillRepository skillRepository;
 
     @InjectMocks
     private UpdateProfileDataService updateProfileDataService;

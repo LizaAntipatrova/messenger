@@ -106,11 +106,12 @@ public class UserCdcListener {
             var event = objectMapper.treeToValue(recordRoot.get("payload"), DebeziumUserSkillEventDto.class);
             var linkData = "d".equals(event.getOp()) ? event.getBefore() : event.getAfter();
 
-            UserDimension userDim = userDimensionRepository.findFirstByIdNaturalUserOrderByUserKeyDesc(linkData.getUserId().intValue())
-                    .orElse(null);
+            UserDimension userDim = userDimensionRepository.findFirstByIdNaturalUserOrderByUserKeyDesc(
+                    linkData.getUserId().intValue()).orElse(null);
 
             if (userDim == null) {
-                log.warn("CDC USER_SKILLS: user with natural ID {} is not found in d_user, link skipped", linkData.getUserId());
+                log.warn("CDC USER_SKILLS: user with natural ID {} is not found in d_user, link skipped",
+                        linkData.getUserId());
                 return;
             }
 

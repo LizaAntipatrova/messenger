@@ -22,6 +22,9 @@ public class WebClientConfig {
     @Value("${messaging.service.url}")
     private String messagingServiceUrl;
 
+    @Value("${task.service.url}")
+    private String taskServiceUrl;
+
     @Value("${webclient.timeout}")
     private Integer webClientTimeout;
 
@@ -51,6 +54,13 @@ public class WebClientConfig {
     public WebClient messagingServiceWebClient(WebClient.Builder webClientBuilder) {
         return webClientBuilder
                 .baseUrl(messagingServiceUrl)
+                .build();
+    }
+
+    @Bean
+    public WebClient taskServiceWebClient(WebClient.Builder webClientBuilder) {
+        return webClientBuilder
+                .baseUrl(taskServiceUrl)
                 .build();
     }
 }

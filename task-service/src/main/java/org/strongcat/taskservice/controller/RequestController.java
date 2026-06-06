@@ -3,6 +3,7 @@ package org.strongcat.taskservice.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.strongcat.taskservice.dto.CreateRequestDto;
 import org.strongcat.taskservice.service.RequestService;
@@ -15,8 +16,8 @@ public class RequestController {
     private final RequestService requestService;
 
     @PostMapping
-    public ResponseEntity<Long> createRequest(@RequestBody CreateRequestDto dto) {
-        Long requestId = requestService.createRequest(dto);
+    public ResponseEntity<Long> createRequest(@RequestBody CreateRequestDto dto, Authentication authentication) {
+        Long requestId = requestService.createRequest(dto, Long.parseLong(authentication.getName()));
         return ResponseEntity.status(HttpStatus.CREATED).body(requestId);
     }
 }

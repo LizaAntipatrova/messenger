@@ -7,6 +7,7 @@ import com.yazikochesalna.userservice.exception.ResourceNotFoundCustomException;
 import com.yazikochesalna.userservice.exception.UserAlreadyExistsCustomException;
 import com.yazikochesalna.userservice.data.entity.Users;
 import com.yazikochesalna.userservice.data.repository.UsersRepository;
+import com.yazikochesalna.userservice.dto.internal.RegisterSpecialistDto;
 import com.yazikochesalna.userservice.dto.updateuserdto.UpdateUserRequestDto;
 import com.yazikochesalna.userservice.dto.updateuserdto.UpdateUserResponseDto;
 import com.yazikochesalna.userservice.service.mapper.UploadUserMapper;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.naming.ServiceUnavailableException;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -27,6 +29,7 @@ public class UpdateProfileDataService {
     private final UsersRepository usersRepository;
     private final UploadUserMapper uploadUserMapper;
     private final MessagingClientService messagingClientService;
+    private final TaskServiceClientService taskServiceClientService;
     private final SkillRepository skillRepository;
 
     public void SendUsernameNotification(Long id, UpdateUserRequestDto updateDto) throws ServiceUnavailableException {
@@ -48,8 +51,40 @@ public class UpdateProfileDataService {
         updateUserFields(user, updateDto);
         updateUserSkills(user, updateDto);
         Users updatedUser = usersRepository.save(user);
+        syncSpecialistIfReady(updatedUser);
 
         return uploadUserMapper.toUpdateUserResponseDto(updatedUser);
+    }
+
+    private void syncSpecialistIfReady(Users user) {
+        if (!isSpecialistProfileComplete(user)) {
+            return;
+        }
+
+        List<Long> skillIds = user.getSkills().stream()
+                .map(Skill::getId)
+                .toList();
+
+        RegisterSpecialistDto specialistDto = RegisterSpecialistDto.builder()
+                .externalUserId(user.getId())
+                .specializationName(user.getSpecialization())
+                .experienceMonths(user.getExperience())
+                .skillIds(skillIds)
+                .build();
+
+        try {
+            taskServiceClientService.syncSpecialist(specialistDto);
+            log.info("Профиль исполнителя userId={} синхронизирован с task-service", user.getId());
+        } catch (ServiceUnavailableException e) {
+            log.error("Не удалось синхронизировать профиль исполнителя userId={}: {}",
+                    user.getId(), e.getMessage());
+        }
+    }
+
+    private boolean isSpecialistProfileComplete(Users user) {
+        return user.getSpecialization() != null && !user.getSpecialization().isBlank()
+                && user.getExperience() != null
+                && user.getSkills() != null && !user.getSkills().isEmpty();
     }
 
     private void updateUserFields(Users user, UpdateUserRequestDto updateDto) {
@@ -74,10 +109,8 @@ public class UpdateProfileDataService {
             return;
         }
 
-        // Изчистваме старите връзки в колекцията
         user.getSkills().clear();
 
-        // Обхождаме сета от ID-та и намираме съответните управлявани субекти (Skill) от базата
         updateDto.getSkills().forEach(skillId -> {
             if (skillId != null) {
                 Skill skill = skillRepository.findById(skillId)

@@ -42,6 +42,7 @@ class CassandraEntitiesConvertor {
                 chatId = message.chatId,
                 memberId = message.senderId
             )
+            MessageType.TASK_REQUEST -> PayLoadTaskRequestDTO.fromMessage(message)
         }
         return payload.toMessageJsonFormatDTO(message, attachments)
     }

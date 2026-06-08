@@ -68,33 +68,91 @@ services:
     volumes:
       - postgres-task-data:/var/lib/postgresql
 
+#  cassandra-messages:
+#    image: bitnami/cassandra:4.1.4-debian-12-r14
+##    image: cr.yandex/mirror/bitnami/cassandra:4.1
+#    container_name: cassandra_db
+#    ports:
+#      - "9042:9042"
+#    volumes:
+#      - cassandra-messages-data:/var/lib/cassandra
+#      - cassandra-init-flag:/bitnami/cassandra/initialized
+#      - ./message-storage-service/cassandra/cassandra-init-scripts:/docker-entrypoint-initdb.d:Z
+#     # - ./message-storage-service/cassandra-conf/cassandra.yaml:/opt/bitnami/cassandra/conf/cassandra.yaml
+#    environment:
+#      - CASSANDRA_USER=db_admin
+#      - CASSANDRA_PASSWORD=1234
+#      - CASSANDRA_PASSWORD_SEEDER=yes
+#      - CASSANDRA_CLUSTER_NAME=MyCluster
+#      - CASSANDRA_DATACENTER=datacenter1
+#      - CASSANDRA_AUTHENTICATOR=PasswordAuthenticator
+#      - CASSANDRA_AUTHORIZER=CassandraAuthorizer
+#      - CASSANDRA_ENABLE_MATERIALIZED_VIEWS=true
+#      - MAX_HEAP_SIZE=512M
+#      - HEAP_NEWSIZE=100M
+##      - CASSANDRA_AUTHENTICATOR=AllowAllAuthenticator
+##    healthcheck:
+##      test: [ "CMD-SHELL", "cqlsh -u cassandra -p cassandra -e 'DESCRIBE KEYSPACES'" ]
+#    healthcheck:
+#      test: [ "CMD-SHELL", "cqlsh -u db_admin -p 1234 -e 'DESCRIBE KEYSPACES'" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#    networks:
+#      - cassandra_network
+
+
   cassandra-messages:
-    image: bitnami/cassandra:4.1
+    image: cassandra:4.1
     container_name: cassandra_db
     ports:
       - "9042:9042"
     volumes:
       - cassandra-messages-data:/var/lib/cassandra
-      - cassandra-init-flag:/bitnami/cassandra/initialized
       - ./message-storage-service/cassandra/cassandra-init-scripts:/docker-entrypoint-initdb.d:Z
-     # - ./message-storage-service/cassandra-conf/cassandra.yaml:/opt/bitnami/cassandra/conf/cassandra.yaml
     environment:
-      - CASSANDRA_USER=db_admin
-      - CASSANDRA_PASSWORD=1234
-      - CASSANDRA_PASSWORD_SEEDER=yes
       - CASSANDRA_CLUSTER_NAME=MyCluster
-      - CASSANDRA_DATACENTER=datacenter1
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - CASSANDRA_AUTHENTICATOR=PasswordAuthenticator
       - CASSANDRA_AUTHORIZER=CassandraAuthorizer
       - CASSANDRA_ENABLE_MATERIALIZED_VIEWS=true
-#      - CASSANDRA_AUTHENTICATOR=AllowAllAuthenticator
     healthcheck:
-      test: [ "CMD-SHELL", "cqlsh -u cassandra -p cassandra -e 'DESCRIBE KEYSPACES'" ]
+      test: [ "CMD-SHELL", "nodetool status | grep -E '^UN' > /dev/null || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 40s # Даем базе 40 секунд на полную инициализацию system_auth системных таблиц
     networks:
       - cassandra_network
+
+#  cassandra-messages:
+#    image: cassandra:4.1
+#    container_name: cassandra_db
+#    ports:
+#      - "9042:9042"
+#    volumes:
+#      - cassandra-messages-data:/var/lib/cassandra
+#      - ./message-storage-service/cassandra/cassandra-init-scripts:/docker-entrypoint-initdb.d:Z
+#    environment:
+#      - CASSANDRA_USER=db_admin
+#      - CASSANDRA_PASSWORD=1234
+#      - CASSANDRA_CLUSTER_NAME=MyCluster
+#      - CASSANDRA_DC=datacenter1
+#      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+#      - CASSANDRA_USER=db_admin
+#      - CASSANDRA_PASSWORD_SEEDER=yes
+#      - CASSANDRA_AUTHENTICATOR=PasswordAuthenticator
+#      - CASSANDRA_AUTHORIZER=CassandraAuthorizer
+#      - CASSANDRA_ENABLE_MATERIALIZED_VIEWS=true
+#
+#    healthcheck:
+#      test: [ "CMD-SHELL", "cqlsh -u db_admin -p 1234 -e 'DESCRIBE KEYSPACES'" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#    networks:
+#      - cassandra_network
 
   redis:
     image: redis:7.0-alpine

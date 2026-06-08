@@ -8,6 +8,7 @@ import com.yazikochesalna.messagingservice.dto.events.payload.chat.impl.ChatAvat
 import com.yazikochesalna.messagingservice.dto.events.payload.chat.impl.ChatMemberUpdatePayloadDTO;
 import com.yazikochesalna.messagingservice.dto.events.payload.chat.impl.ChatMessagePayloadDTO;
 import com.yazikochesalna.messagingservice.dto.events.payload.chat.impl.ChatPinnedMessagePayloadDTO;
+import com.yazikochesalna.messagingservice.dto.events.payload.chat.impl.ChatTaskRequestPayloadDTO;
 import com.yazikochesalna.messagingservice.dto.events.payload.user.impl.UserAvatarUpdatePayloadDTO;
 import com.yazikochesalna.messagingservice.dto.events.payload.user.impl.UserUsernameUpdatePayloadDTO;
 import com.yazikochesalna.messagingservice.exception.InvalidMessageFormatCustomException;
@@ -27,7 +28,8 @@ public class DTODeserializer {
             EventType.PIN, ChatPinnedMessagePayloadDTO.class,
             EventType.NEW_CHAT_AVATAR, ChatAvatarPayloadDTO.class,
             EventType.NEW_USER_AVATAR, UserAvatarUpdatePayloadDTO.class,
-            EventType.NEW_USERNAME, UserUsernameUpdatePayloadDTO.class
+            EventType.NEW_USERNAME, UserUsernameUpdatePayloadDTO.class,
+            EventType.TASK_REQUEST, ChatTaskRequestPayloadDTO.class
     );
 
     public static Instant getTime(JsonNode node) {

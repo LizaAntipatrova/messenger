@@ -211,5 +211,19 @@ public class ChatsController {
         return ResponseEntity.notFound().build();
     }
 
+    @PostMapping({"/internal/dialog", "/internal/dialog/"})
+    @RolesAllowed("SERVICE")
+    @Operation(summary = "Создание или получение личного чата между двумя пользователями",
+            description = "Внутренний метод для сервисов. Создаёт PRIVATE-чат или возвращает существующий.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Чат найден или создан"),
+            @ApiResponse(responseCode = "400", description = "Некорректный запрос")
+    })
+    @Hidden
+    public ResponseEntity<GetDialogResponseDto> createOrGetDialogInternal(
+            @Valid @RequestBody CreateDialogRequest request) {
+        return ResponseEntity.ok(chatService.getOrCreateDialog(request.userId(), request.partnerId()));
+    }
+
 
 }

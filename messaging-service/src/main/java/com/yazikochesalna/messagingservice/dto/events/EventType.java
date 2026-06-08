@@ -7,5 +7,6 @@ public enum EventType {
     PIN,
     NEW_CHAT_AVATAR,
     NEW_USER_AVATAR,
-    NEW_USERNAME
+    NEW_USERNAME,
+    TASK_REQUEST
 }

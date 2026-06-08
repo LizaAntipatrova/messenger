@@ -1,18 +1,24 @@
 package org.strongcat.taskservice.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.strongcat.taskservice.data.entity.*;
 import org.strongcat.taskservice.data.enums.RequestStatusName;
 import org.strongcat.taskservice.data.enums.ResponseStatusName;
 import org.strongcat.taskservice.data.repository.*;
 import org.strongcat.taskservice.dto.CreateRequestDto;
+import org.strongcat.taskservice.dto.internal.TaskDistributionRecipientDto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RequestService {
@@ -22,11 +28,10 @@ public class RequestService {
     private final SpecializationRepository specializationRepository;
     private final SkillRepository skillRepository;
     private final RequestSkillRepository requestSkillRepository;
-
-    // Внедряем наш вычислительный сервис подбора
     private final MatchingService matchingService;
     private final RequestRecipientRepository requestRecipientRepository;
     private final ResponseStatusRepository responseStatusRepository;
+    private final RequestDistributionService requestDistributionService;
 
     @Transactional
     public Long createRequest(CreateRequestDto dto, Long initiatorId) {
@@ -89,13 +94,62 @@ public class RequestService {
                 recipient.setSentAt(LocalDateTime.now());
             }
 
-            // Сохраняем массив адресатов в базу данных
-            requestRecipientRepository.saveAll(bestCandidates);
-
-            // TODO позже: Здесь будет вызывать метод другого микросервиса для отправки событий в Kafka
-            // другойМикросервисClient.sendNotifications(bestCandidates);
+            List<RequestRecipient> savedRecipients = requestRecipientRepository.saveAll(bestCandidates);
+            scheduleTaskDistribution(savedRequest, savedRecipients);
         }
 
         return savedRequest.getId();
+    }
+
+    private void scheduleTaskDistribution(Request request, List<RequestRecipient> recipients) {
+        Long requestId = request.getId();
+        Long initiatorId = request.getInitiatorId();
+        String description = request.getDescription();
+        BigDecimal payment = request.getPayment();
+        String specializationName = request.getSpecialization().getName();
+        List<TaskDistributionRecipientDto> recipientDtos = recipients.stream()
+                .map(recipient -> TaskDistributionRecipientDto.builder()
+                        .recipientId(recipient.getId())
+                        .specialistExternalUserId(recipient.getSpecialist().getExternalUserId())
+                        .rankPosition(recipient.getRankPosition())
+                        .build())
+                .toList();
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                requestDistributionService.distributeRequestToSpecialists(
+                        requestId, initiatorId, description, payment, specializationName, recipientDtos);
+            }
+        });
+    }
+
+    @Transactional(readOnly = true)
+    public String getRequestStatus(Long requestId) {
+        Request request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Задача не найдена с id: " + requestId));
+
+        // Берем имя из сущности-статуса задачи
+        return request.getRequestStatus().getName();
+    }
+
+    /**
+     * Получить статус отклика конкретного специалиста на задачу
+     */
+    @Transactional(readOnly = true)
+    public String getResponseStatus(Long requestId, Long externalUserId) {
+        RequestRecipient recipient = requestRecipientRepository.findByRequestIdAndSpecialistExternalUserId(requestId, externalUserId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        String.format("Откликов для специалиста %d по задаче %d не найдено", externalUserId, requestId)
+                ));
+
+        // Берем имя из сущности-статуса отклика
+        return recipient.getResponseStatus().getName();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Long> getAcceptedSpecialistExternalUserId(Long requestId) {
+        return requestRecipientRepository.findAcceptedRecipientByRequestId(requestId)
+                .map(recipient -> recipient.getSpecialist().getExternalUserId());
     }
 }

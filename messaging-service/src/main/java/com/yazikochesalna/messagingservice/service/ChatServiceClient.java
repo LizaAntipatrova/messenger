@@ -2,6 +2,8 @@ package com.yazikochesalna.messagingservice.service;
 
 import com.yazikochesalna.common.service.JwtService;
 import com.yazikochesalna.messagingservice.config.properties.ChatServiceProperties;
+import com.yazikochesalna.messagingservice.dto.chat.CreateDialogRequestDto;
+import com.yazikochesalna.messagingservice.dto.chat.CreateDialogResponseDto;
 import com.yazikochesalna.messagingservice.dto.chat.UsersResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ public class ChatServiceClient {
     public static final String CHECK_USER_IN_CHAT_URL_FORMAT = "%s/api/v1/chats/check/%d/%d";
     public static final String GET_USERS_BY_CHAT_ID_URL_FORMAT = "%s/api/v1/chats/%d/members";
     public static final String GET_USER_COMPANIONS_URL_FORMAT = "%s/api/v1/chats/companions/%d";
+    public static final String CREATE_DIALOG_URL_FORMAT = "%s/api/v1/chats/internal/dialog";
     private final WebClient chatServiceWebClient;
     private final JwtService jwtService;
 
@@ -62,5 +65,27 @@ public class ChatServiceClient {
                 .map(UsersResponseDTO::getUserIds)
                 .onErrorReturn(Collections.emptyList())
                 .block();
+    }
+
+    public Long createOrGetDialog(Long userId, Long partnerId) {
+        var url = String.format(CREATE_DIALOG_URL_FORMAT, chatServiceProperties.getUrl());
+        CreateDialogRequestDto request = CreateDialogRequestDto.builder()
+                .userId(userId)
+                .partnerId(partnerId)
+                .build();
+
+        CreateDialogResponseDto response = chatServiceWebClient.post()
+                .uri(url)
+                .headers(headers -> headers.setBearerAuth(jwtService.generateServiceToken()))
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(CreateDialogResponseDto.class)
+                .block();
+
+        if (response == null || response.getChatId() == null) {
+            throw new IllegalStateException(
+                    "Chat service failed to create dialog for users " + userId + " and " + partnerId);
+        }
+        return response.getChatId();
     }
 }

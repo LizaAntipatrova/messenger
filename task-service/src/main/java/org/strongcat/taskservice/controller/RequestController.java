@@ -20,4 +20,11 @@ public class RequestController {
         Long requestId = requestService.createRequest(dto, Long.parseLong(authentication.getName()));
         return ResponseEntity.status(HttpStatus.CREATED).body(requestId);
     }
+
+    @GetMapping("/{requestId}/accepted-specialist")
+    public ResponseEntity<Long> getAcceptedSpecialist(@PathVariable("requestId") Long requestId) {
+        return requestService.getAcceptedSpecialistExternalUserId(requestId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
 }

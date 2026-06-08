@@ -65,7 +65,7 @@ public class WebSocketEventService {
 
     private Long getChatId(EventDTO eventDTO) {
         return switch (eventDTO.getType()) {
-            case MESSAGE, NEW_CHAT_AVATAR, NEW_MEMBER, DROP_MEMBER, PIN ->
+            case MESSAGE, NEW_CHAT_AVATAR, NEW_MEMBER, DROP_MEMBER, PIN, TASK_REQUEST ->
                     eventDTO.<ChatPayloadDTO>getPayload().getChatId();
             default -> null;
         };

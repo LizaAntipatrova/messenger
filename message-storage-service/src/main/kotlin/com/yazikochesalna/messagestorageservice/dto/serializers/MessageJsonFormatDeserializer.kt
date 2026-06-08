@@ -106,6 +106,7 @@ open class MessageJsonFormatDeserializer : StdDeserializer<MessagesJsonFormatDTO
         MessageType.DROP_MEMBER to PayLoadNoticeDTO::class.java,
         MessageType.PIN to PayLoadPinDTO::class.java,
         MessageType.NEW_CHAT_AVATAR to PayLoadNewChatAvatarDTO::class.java,
+        MessageType.TASK_REQUEST to PayLoadTaskRequestDTO::class.java,
     )
 
 }

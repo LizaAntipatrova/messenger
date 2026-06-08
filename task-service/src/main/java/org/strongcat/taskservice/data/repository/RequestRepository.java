@@ -20,4 +20,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
             @Param("requestId") Long requestId,
             @Param("specialistExternalUserId") Long specialistExternalUserId
     );
+
+
 }

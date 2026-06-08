@@ -1,23 +1,25 @@
 package org.strongcat.taskservice.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.strongcat.taskservice.data.entity.Request;
 import org.strongcat.taskservice.data.entity.RequestRecipient;
 import org.strongcat.taskservice.data.entity.RequestStatus;
 import org.strongcat.taskservice.data.entity.ResponseStatus;
-//import org.strongcat.taskservice.data.entity.ResponseStatusName;
 import org.strongcat.taskservice.data.enums.RequestStatusName;
 import org.strongcat.taskservice.data.enums.ResponseStatusName;
 import org.strongcat.taskservice.data.repository.RequestRecipientRepository;
 import org.strongcat.taskservice.data.repository.RequestRepository;
 import org.strongcat.taskservice.data.repository.RequestStatusRepository;
 import org.strongcat.taskservice.data.repository.ResponseStatusRepository;
-//import org.strongcat.taskservice.dto.event.SystemMessageEvent;
+import org.strongcat.taskservice.dto.internal.TaskRequestResponseNotificationDto;
 
+import javax.naming.ServiceUnavailableException;
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RequestResponseService {
@@ -26,52 +28,45 @@ public class RequestResponseService {
     private final ResponseStatusRepository responseStatusRepository;
     private final RequestRepository requestRepository;
     private final RequestStatusRepository requestStatusRepository;
-    // Предполагаем, что у тебя будет компонент отправки в Kafka, например:
-    // private final KafkaTemplate<String, SystemMessageEvent> kafkaTemplate;
+    private final MessagingClientService messagingClientService;
 
     @Transactional
     public void acceptRequest(Long requestId, Long specialistExternalUserId) {
-        changeResponseStatus(requestId, specialistExternalUserId, ResponseStatusName.ACCEPTED);
-        
-        // Тут можно вызвать отправку в Kafka:
-        // publishSystemMessage(recipient, "Специалист принял вашу задачу!");
+        RequestRecipient recipient = changeResponseStatus(requestId, specialistExternalUserId, ResponseStatusName.ACCEPTED);
+        notifyTaskResponse(recipient, ResponseStatusName.ACCEPTED);
+
+        Request request = requestRepository.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("Задача не найдена с id: " + requestId));
+        RequestStatus analyzingStatus = requestStatusRepository.findByName(RequestStatusName.ANALYZING.getDatabaseName())
+                .orElseThrow(() -> new IllegalStateException("Статус 'ANALYZING' не инициализирован в справочнике БД"));
+        request.setRequestStatus(analyzingStatus);
+        requestRepository.save(request);
+
     }
 
     @Transactional
     public void rejectRequest(Long requestId, Long specialistExternalUserId) {
-        changeResponseStatus(requestId, specialistExternalUserId, ResponseStatusName.DECLINED);
-        
-        // Тут можно вызвать отправку в Kafka:
-        // publishSystemMessage(recipient, "Специалист отклонил вашу задачу.");
+        RequestRecipient recipient = changeResponseStatus(requestId, specialistExternalUserId, ResponseStatusName.DECLINED);
+        notifyTaskResponse(recipient, ResponseStatusName.DECLINED);
     }
-
-    // Добавь этот метод в твой существующий RequestResponseService
 
     @Transactional
     public void completeRequest(Long requestId, Long specialistExternalUserId) {
-        // 1. Проверяем, что задача существует и была принята именно этим специалистом
         Request request = requestRepository.findAcceptedRequestBySpecialist(requestId, specialistExternalUserId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Не удалось завершить задачу. Задача с id " + requestId +
                                 " не найдена, либо вы не являетесь её утвержденным исполнителем."
                 ));
 
-        // 2. Находим статус COMPLETED в справочнике через наш Enum
         RequestStatus completedStatus = requestStatusRepository.findByName(RequestStatusName.COMPLETED.getDatabaseName())
                 .orElseThrow(() -> new IllegalStateException("Статус 'COMPLETED' не инициализирован в БД"));
 
-        // 3. Обновляем статус задачи
         request.setRequestStatus(completedStatus);
         requestRepository.save(request);
-
-        // 4. Отправляем системное уведомление в Kafka для инициатора задачи
-        // String messageText = "Исполнитель отметил задачу '" + request.getDescription() + "' как выполненную!";
-        // publishSystemMessage(request.getInitiatorId(), specialistExternalUserId, messageText);
     }
 
     private RequestRecipient changeResponseStatus(Long requestId, Long specialistExternalUserId,
                                                   ResponseStatusName statusName) {
-        // 1. Находим запись адресации
         RequestRecipient recipient = requestRecipientRepository
                 .findByRequestIdAndSpecialistExternalUserId(requestId, specialistExternalUserId)
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -79,15 +74,39 @@ public class RequestResponseService {
                                 specialistExternalUserId
                 ));
 
-        // 2. Находим целевой статус в БД через наш Enum
         ResponseStatus responseStatus = responseStatusRepository.findByName(statusName.getDatabaseName())
                 .orElseThrow(() -> new IllegalStateException("Статус '" + statusName.getDatabaseName() +
                         "' не инициализирован в БД"));
 
-        // 3. Обновляем данные
         recipient.setResponseStatus(responseStatus);
         recipient.setRespondedAt(LocalDateTime.now());
 
         return requestRecipientRepository.save(recipient);
+    }
+
+    private void notifyTaskResponse(RequestRecipient recipient, ResponseStatusName statusName) {
+        if (recipient.getExternalChatId() == null) {
+            log.warn("Пропуск уведомления о статусе задачи: external_chat_id не задан для recipientId={}",
+                    recipient.getId());
+            return;
+        }
+
+        Request request = recipient.getRequest();
+        TaskRequestResponseNotificationDto notification = TaskRequestResponseNotificationDto.builder()
+                .requestId(request.getId())
+                .chatId(recipient.getExternalChatId())
+                .initiatorId(request.getInitiatorId())
+                .description(request.getDescription())
+                .payment(request.getPayment())
+                .specializationName(request.getSpecialization().getName())
+                .responseStatus(statusName.name())
+                .build();
+
+        try {
+            messagingClientService.notifyTaskRequestResponse(notification);
+        } catch (ServiceUnavailableException e) {
+            log.error("Не удалось отправить уведомление о статусе задачи requestId={}: {}",
+                    request.getId(), e.getMessage());
+        }
     }
 }

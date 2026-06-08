@@ -7,7 +7,8 @@ enum class MessageType(val type: String) {
     NEW_MEMBER("NEW_MEMBER"),
     DROP_MEMBER("DROP_MEMBER"),
     PIN("PIN"),
-    NEW_CHAT_AVATAR("NEW_CHAT_AVATAR");
+    NEW_CHAT_AVATAR("NEW_CHAT_AVATAR"),
+    TASK_REQUEST("TASK_REQUEST");
 
     companion object {
         fun fromType(type: String?): MessageType {

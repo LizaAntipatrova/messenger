@@ -68,8 +68,7 @@ public class TaskCdcListener {
                         });
 
                 if (after.getPayment() != null) td.setBudget(after.getPayment().floatValue());
-                if (after.getExpectedDurationDays() != null) td.setDuration(after.getExpectedDurationDays()
-                        .floatValue());
+                if (after.getExpectedDurationDays() != null) td.setDuration(after.getExpectedDurationDays().floatValue());
                 if (after.getSpecializationId() != null) td.setCategoryId(after.getSpecializationId());
 
                 taskDimensionRepository.save(td);
@@ -83,8 +82,7 @@ public class TaskCdcListener {
                 TaskDimension td = taskDimensionRepository.findByIdNaturalTask(naturalId).orElse(null);
                 if (td != null) {
                     if (after.getPayment() != null) td.setBudget(after.getPayment().floatValue());
-                    if (after.getExpectedDurationDays() != null) td.setDuration(after.getExpectedDurationDays()
-                            .floatValue());
+                    if (after.getExpectedDurationDays() != null) td.setDuration(after.getExpectedDurationDays().floatValue());
                     if (after.getSpecializationId() != null) td.setCategoryId(after.getSpecializationId());
 
                     taskDimensionRepository.save(td);
@@ -96,7 +94,7 @@ public class TaskCdcListener {
                 Long statusId = after.getRequestStatusId();
                 String statusName = statusId != null ? statusIdToName.get(statusId) : null;
 
-                if ("COMPLETE".equals(statusName)) {
+                if ("COMPLETED".equals(statusName)) {
                     Long specialistExternal = requestAssigneeCache.get(naturalId.longValue());
                     if (specialistExternal == null) {
                         log.warn("CDC REQUEST: no cached assignee for completed request {}", naturalId);
@@ -112,8 +110,8 @@ public class TaskCdcListener {
                         return;
                     }
 
-                    UserDimension userDim = userDimensionRepository.findFirstByIdNaturalUserOrderByUserKeyDesc
-                                    (specialistExternal.intValue())
+                    UserDimension userDim = userDimensionRepository.findFirstByIdNaturalUserOrderByUserKeyDesc(
+                            specialistExternal.intValue())
                             .orElse(null);
                     if (userDim == null) {
                         log.warn("CDC REQUEST: user dimension not found for external user {}", specialistExternal);
@@ -138,6 +136,11 @@ public class TaskCdcListener {
 
                     userFactRepository.save(fact);
                     log.info("CDC REQUEST: fact_user saved for request {}, user {}", naturalId, specialistExternal);
+
+                    Long currentUserKey = userDim.getUserKey();
+                    userDimensionRepository.updatePreferedComplexity(currentUserKey);
+                    userDimensionRepository.updateTopTaskCategories(currentUserKey);
+                    log.info("CDC REQUEST: d_user calculated fields updated for userKey {}", currentUserKey);
                 }
             }
         } catch (Exception e) {

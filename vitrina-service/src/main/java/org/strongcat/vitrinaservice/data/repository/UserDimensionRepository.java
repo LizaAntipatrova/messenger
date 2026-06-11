@@ -30,4 +30,38 @@ public interface UserDimensionRepository extends JpaRepository<UserDimension, Lo
             where user_key = :userKey and skill_key = :skillKey
             """, nativeQuery = true)
     int deleteUserSkillLink(@Param("userKey") Long userKey, @Param("skillKey") Long skillKey);
+
+    @Modifying
+    @Query(value = """
+            update d_user
+            set prefered_complexity = (
+                select coalesce(avg(t.experience), 0.0)::real
+                from fact_user f
+                join d_task t on f.task_key = t.task_key
+                where f.user_key = :userKey
+            )
+            where user_key = :userKey
+            """, nativeQuery = true)
+    void updatePreferedComplexity(@Param("userKey") Long userKey);
+
+    @Modifying
+    @Query(value = """
+            update d_user
+            set top_task_category = (
+                with ranked_categories as (
+                    select t.category_id, count(*) as cnt,
+                           row_number() over (order by count(*) desc) as rn
+                    from fact_user f
+                    join d_task t on f.task_key = t.task_key
+                    where f.user_key = :userKey and t.category_id is not null
+                    group by t.category_id
+                )
+                select array_agg(category_id order by rn)
+                from ranked_categories
+                where rn <= 3
+            )
+            where user_key = :userKey
+            """, nativeQuery = true)
+    void updateTopTaskCategories(@Param("userKey") Long userKey);
+
 }

@@ -7,15 +7,16 @@ import org.springframework.stereotype.Repository;
 import org.strongcat.taskservice.data.entity.RequestRecipient;
 import org.strongcat.taskservice.data.entity.RequestStatus;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface RequestRecipientRepository extends JpaRepository<RequestRecipient, Long> {
 
     @Query("SELECT rr FROM RequestRecipient rr " +
-            "WHERE rr.request.id = :requestId " +
-            "AND rr.specialist.externalUserId = :externalUserId")
-    Optional<RequestRecipient> findByRequestIdAndSpecialistExternalUserId(
+            "WHERE rr.request.id = :requestId")
+//            "AND rr.specialist.externalUserId = :externalUserId")
+    List<RequestRecipient> findByRequestIdAndSpecialistExternalUserId(
             @Param("requestId") Long requestId,
             @Param("externalUserId") Long externalUserId
     );

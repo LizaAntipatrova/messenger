@@ -1,5 +1,55 @@
+x-common-microservice-env: &common-microservice-env
+  JWT_SECRET_KEY: "5d1a51090ece358e6afa19650833608a44732a9a6251cbd4c6e1cb0ca2eb6735d439efc354d1fccd73f461124023f4cea4020de8efaf57843e4c63d8296bc7f9"
+  JWT_ACCESS_TOKEN_EXPIRATION: 36000000
+  JWT_REFRESH_TOKEN_EXPIRATION: 252000000
+
+  WEBCLIENT_TIMEOUT: 50000
+
+  CHAT_SERVICE_URL: http://chat-service:8080
+  MESSAGE_STORAGE_SERVICE_URL: http://message-storage-service:8080
+  MESSAGING_SERVICE_URL: http://messaging-service:8080
+  USER_SERVICE_URL: http://user-service:8080
+  AUTHORIZATION_SERVICE_URL: http://authorization-service:8080
+  FRONT_SERVER_URL: http://localhost:5173
+  TASK_SERVICE_URL: http://task-service:8080
+
+  JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+x-resources-postgres: &resources-postgres
+  cpus: "0.50"
+  mem_limit: 384m
+
+x-resources-redis: &resources-redis
+  cpus: "0.25"
+  mem_limit: 128m
+
+x-resources-kafka: &resources-kafka
+  cpus: "1.00"
+  mem_limit: 1024m
+
+x-resources-cassandra: &resources-cassandra
+  cpus: "1.00"
+  mem_limit: 1536m
+
+x-resources-elasticsearch: &resources-elasticsearch
+  cpus: "1.00"
+  mem_limit: 1536m
+
+x-resources-minio: &resources-minio
+  cpus: "0.50"
+  mem_limit: 256m
+
+x-resources-debezium: &resources-debezium
+  cpus: "0.75"
+  mem_limit: 768m
+
+x-resources-microservice: &resources-microservice
+  cpus: "0.50"
+  mem_limit: 512m
+
 services:
   postgres-chat:
+    <<: *resources-postgres
     image: postgres:latest
     container_name: chatdatabase
     ports:
@@ -11,8 +61,8 @@ services:
     volumes:
       - postgres-chat-data:/var/lib/postgresql
 
-
   postgres-users:
+    <<: *resources-postgres
     image: postgres:latest
     container_name: userdatabase
     ports:
@@ -25,8 +75,8 @@ services:
     volumes:
       - postgres-user-data:/var/lib/postgresql
 
-
   postgres-auth:
+    <<: *resources-postgres
     image: postgres:latest
     container_name: authdatabase
     ports:
@@ -37,13 +87,9 @@ services:
       POSTGRES_PASSWORD: 1234
     volumes:
       - postgres-auth-data:/var/lib/postgresql
-#    healthcheck:
-#      test: ["CMD-SHELL", "pg_isready -U analytics_user -d analyticsdb"]
-#      interval: 5s
-#      timeout: 5s
-#      retries: 5
 
   postgres-datamart:
+    <<: *resources-postgres
     image: postgres:latest
     container_name: data-mart
     ports:
@@ -56,6 +102,7 @@ services:
       - postgres-datamart-data:/var/lib/postgresql
 
   postgres-task:
+    <<: *resources-postgres
     image: postgres:latest
     container_name: task-database
     ports:
@@ -64,45 +111,77 @@ services:
       POSTGRES_DB: task-database
       POSTGRES_USER: user
       POSTGRES_PASSWORD: 1234
-    command: [ "postgres", "-c", "wal_level=logical", "-c", "max_wal_senders=4", "-c", "max_replication_slots=4" ]
+    command: ["postgres", "-c", "wal_level=logical", "-c", "max_wal_senders=4", "-c", "max_replication_slots=4"]
     volumes:
       - postgres-task-data:/var/lib/postgresql
 
-#  cassandra-messages:
-#    image: bitnami/cassandra:4.1.4-debian-12-r14
-##    image: cr.yandex/mirror/bitnami/cassandra:4.1
-#    container_name: cassandra_db
-#    ports:
-#      - "9042:9042"
-#    volumes:
-#      - cassandra-messages-data:/var/lib/cassandra
-#      - cassandra-init-flag:/bitnami/cassandra/initialized
-#      - ./message-storage-service/cassandra/cassandra-init-scripts:/docker-entrypoint-initdb.d:Z
-#     # - ./message-storage-service/cassandra-conf/cassandra.yaml:/opt/bitnami/cassandra/conf/cassandra.yaml
-#    environment:
-#      - CASSANDRA_USER=db_admin
-#      - CASSANDRA_PASSWORD=1234
-#      - CASSANDRA_PASSWORD_SEEDER=yes
-#      - CASSANDRA_CLUSTER_NAME=MyCluster
-#      - CASSANDRA_DATACENTER=datacenter1
-#      - CASSANDRA_AUTHENTICATOR=PasswordAuthenticator
-#      - CASSANDRA_AUTHORIZER=CassandraAuthorizer
-#      - CASSANDRA_ENABLE_MATERIALIZED_VIEWS=true
-#      - MAX_HEAP_SIZE=512M
-#      - HEAP_NEWSIZE=100M
-##      - CASSANDRA_AUTHENTICATOR=AllowAllAuthenticator
-##    healthcheck:
-##      test: [ "CMD-SHELL", "cqlsh -u cassandra -p cassandra -e 'DESCRIBE KEYSPACES'" ]
-#    healthcheck:
-#      test: [ "CMD-SHELL", "cqlsh -u db_admin -p 1234 -e 'DESCRIBE KEYSPACES'" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 10
-#    networks:
-#      - cassandra_network
+  cassandra-init:
+    image: cassandra:4.1
+    container_name: cassandra_init
+    cpus: "0.25"
+    mem_limit: 256m
+    depends_on:
+      cassandra-messages:
+        condition: service_healthy
+    networks:
+      - cassandra_network
+    restart: on-failure
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+
+        echo "Waiting for Cassandra CQL availability..."
+
+        until cqlsh cassandra-messages 9042 -u cassandra -p cassandra -e "DESCRIBE KEYSPACES" >/dev/null 2>&1; do
+          echo "Cassandra is not ready yet. Sleeping..."
+          sleep 5
+        done
+
+        echo "Cassandra is ready. Running init script..."
+
+        cqlsh cassandra-messages 9042 -u cassandra -p cassandra <<'CQL'
+        CREATE KEYSPACE IF NOT EXISTS storage_service_keyspace
+        WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
+        USE storage_service_keyspace;
+
+        CREATE TABLE IF NOT EXISTS messages (
+            id UUID,
+            type TEXT,
+            sender_id BIGINT,
+            chat_id BIGINT,
+            text TEXT,
+            send_time TIMESTAMP,
+            marked_to_delete BOOLEAN,
+            PRIMARY KEY (id)
+        );
+
+        CREATE TABLE IF NOT EXISTS messages_by_chat (
+            chat_id BIGINT,
+            send_time TIMESTAMP,
+            id UUID,
+            text TEXT,
+            sender_id BIGINT,
+            type TEXT,
+            marked_to_delete BOOLEAN,
+            PRIMARY KEY ((chat_id), send_time, id)
+        ) WITH CLUSTERING ORDER BY (send_time DESC);
+
+        CREATE TABLE IF NOT EXISTS attachments (
+            id UUID,
+            message_id UUID,
+            type TEXT,
+            PRIMARY KEY ((message_id), id)
+        );
+        CQL
+
+        echo "Cassandra init script completed successfully."
 
 
   cassandra-messages:
+    <<: *resources-cassandra
     image: cassandra:4.1
     container_name: cassandra_db
     ports:
@@ -117,44 +196,19 @@ services:
       - CASSANDRA_AUTHENTICATOR=PasswordAuthenticator
       - CASSANDRA_AUTHORIZER=CassandraAuthorizer
       - CASSANDRA_ENABLE_MATERIALIZED_VIEWS=true
+      - MAX_HEAP_SIZE=768M
+      - HEAP_NEWSIZE=192M
     healthcheck:
-      test: [ "CMD-SHELL", "nodetool status | grep -E '^UN' > /dev/null || exit 1" ]
+      test: ["CMD-SHELL", "nodetool status | grep -E '^UN' > /dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 40s # Даем базе 40 секунд на полную инициализацию system_auth системных таблиц
+      start_period: 40s
     networks:
       - cassandra_network
 
-#  cassandra-messages:
-#    image: cassandra:4.1
-#    container_name: cassandra_db
-#    ports:
-#      - "9042:9042"
-#    volumes:
-#      - cassandra-messages-data:/var/lib/cassandra
-#      - ./message-storage-service/cassandra/cassandra-init-scripts:/docker-entrypoint-initdb.d:Z
-#    environment:
-#      - CASSANDRA_USER=db_admin
-#      - CASSANDRA_PASSWORD=1234
-#      - CASSANDRA_CLUSTER_NAME=MyCluster
-#      - CASSANDRA_DC=datacenter1
-#      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-#      - CASSANDRA_USER=db_admin
-#      - CASSANDRA_PASSWORD_SEEDER=yes
-#      - CASSANDRA_AUTHENTICATOR=PasswordAuthenticator
-#      - CASSANDRA_AUTHORIZER=CassandraAuthorizer
-#      - CASSANDRA_ENABLE_MATERIALIZED_VIEWS=true
-#
-#    healthcheck:
-#      test: [ "CMD-SHELL", "cqlsh -u db_admin -p 1234 -e 'DESCRIBE KEYSPACES'" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 10
-#    networks:
-#      - cassandra_network
-
   redis:
+    <<: *resources-redis
     image: redis:7.0-alpine
     container_name: redis_messaging_service
     ports:
@@ -168,31 +222,8 @@ services:
       retries: 3
     restart: unless-stopped
 
-#  kafka:
-#    image: confluentinc/cp-kafka:latest
-#    container_name: kafka_message_storage
-#    environment:
-#      KAFKA_PROCESS_ROLES: 'broker,controller'
-#      KAFKA_NODE_ID: 1
-#      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
-#      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093'
-#      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:9092'
-#      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-#      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-#      CLUSTER_ID: 'kafka-message-storage-cluster-1'
-#    ports:
-#      - "9092:9092"
-#      - "9093:9093"
-#    volumes:
-#      - kafka-message-storage:/data
-#    healthcheck:
-#      test: [ "CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9092" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 3
-
   kafka:
+    <<: *resources-kafka
     image: confluentinc/cp-kafka:latest
     container_name: kafka_message_storage
     environment:
@@ -205,6 +236,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_HEAP_OPTS: "-Xms512m -Xmx512m"
       CLUSTER_ID: 'kafka-message-storage-cluster-1'
     ports:
       - "9092:9092"
@@ -212,30 +244,31 @@ services:
     volumes:
       - kafka-message-storage:/data
     healthcheck:
-      test: [ "CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9092" ]
+      test: ["CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9092"]
       interval: 10s
       timeout: 5s
       retries: 3
 
   elasticsearch:
+    <<: *resources-elasticsearch
     image: elasticsearch:8.12.0
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - ES_JAVA_OPTS=-Xms768m -Xmx768m
       - xpack.security.enabled=false
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     ports:
       - "9200:9200"
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9200 || exit 1" ]
+      test: ["CMD-SHELL", "curl -f http://localhost:9200 || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 3
 
-
   minio:
+    <<: *resources-minio
     image: minio/minio:latest
     command: server --console-address ":9001" /data/
     ports:
@@ -247,13 +280,14 @@ services:
     volumes:
       - minio-storage:/data
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
 
   debezium-connect:
-    image: huecker.io/debezium/connect:2.4
+    <<: *resources-debezium
+    image: debezium/connect:2.4
     container_name: debezium_connect
     ports:
       - "8090:8083"
@@ -266,6 +300,251 @@ services:
       - CONFIG_STORAGE_TOPIC=my_connect_configs
       - OFFSET_STORAGE_TOPIC=my_connect_offsets
       - STATUS_STORAGE_TOPIC=my_connect_statuses
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0
+
+#  chat-service:
+#    <<: *resources-microservice
+#    build:
+#      context: ./chat-service
+#      dockerfile: Dockerfile
+#    container_name: chat-service
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      <<: *common-microservice-env
+#      SERVER_PORT: 8080
+#      SPRING_PROFILES_ACTIVE: docker
+#
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-chat:5432/chatdatabase
+#      SPRING_DATASOURCE_USERNAME: user
+#      SPRING_DATASOURCE_PASSWORD: 1234
+#
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#    depends_on:
+#      - postgres-chat
+#      - kafka
+#      - user-service
+#      - authorization-service
+#    restart: unless-stopped
+#
+#  message-storage-service:
+#    <<: *resources-microservice
+#    build:
+#      context: ./message-storage-service
+#      dockerfile: Dockerfile
+#    container_name: message-storage-service
+#    ports:
+#      - "8081:8080"
+#    environment:
+#      <<: *common-microservice-env
+#      SERVER_PORT: 8080
+#      SPRING_PROFILES_ACTIVE: docker
+#
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#
+#      SPRING_CASSANDRA_CONTACT_POINTS: cassandra-messages
+#      SPRING_CASSANDRA_PORT: 9042
+#      SPRING_CASSANDRA_LOCAL_DATACENTER: datacenter1
+#      SPRING_CASSANDRA_USERNAME: cassandra
+#      SPRING_CASSANDRA_PASSWORD: cassandra
+#
+#
+#    depends_on:
+#      - kafka
+#      - cassandra-init
+#    networks:
+#      - default
+#      - cassandra_network
+#    restart: unless-stopped
+#
+#  messaging-service:
+#    <<: *resources-microservice
+#    build:
+#      context: ./messaging-service
+#      dockerfile: Dockerfile
+#    container_name: messaging-service
+#    ports:
+#      - "8082:8080"
+#    environment:
+#      <<: *common-microservice-env
+#      SERVER_PORT: 8080
+#      SPRING_PROFILES_ACTIVE: docker
+#
+#      SPRING_DATA_REDIS_HOST: redis
+#      SPRING_DATA_REDIS_PORT: 6379
+#      SPRING_REDIS_HOST: redis
+#      SPRING_REDIS_PORT: 6379
+#      REDIS_HOST: redis
+#      REDIS_PORT: 6379
+#
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#    depends_on:
+#      - redis
+#      - kafka
+#      - chat-service
+#      - message-storage-service
+#      - user-service
+#      - authorization-service
+#    restart: unless-stopped
+#
+#  user-service:
+#    <<: *resources-microservice
+#    build:
+#      context: ./user-service
+#      dockerfile: Dockerfile
+#    container_name: user-service
+#    ports:
+#      - "8083:8080"
+#    environment:
+#      <<: *common-microservice-env
+#      SERVER_PORT: 8080
+#      SPRING_PROFILES_ACTIVE: docker
+#
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-users:5432/userdatabase
+#      SPRING_DATASOURCE_USERNAME: user
+#      SPRING_DATASOURCE_PASSWORD: 1234
+#
+#      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
+#      ELASTICSEARCH_URL: http://elasticsearch:9200
+#
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#    depends_on:
+#      - postgres-users
+#      - kafka
+#      - elasticsearch
+#    restart: unless-stopped
+#
+#  file-service:
+#    <<: *resources-microservice
+#    build:
+#      context: ./file-service
+#      dockerfile: Dockerfile
+#    container_name: file-service
+#    ports:
+#      - "8084:8080"
+#    environment:
+#      <<: *common-microservice-env
+#      SERVER_PORT: 8080
+#      SPRING_PROFILES_ACTIVE: docker
+#
+#      MINIO_ENDPOINT: http://minio:9000
+#      MINIO_ACCESS_KEY: user
+#      MINIO_SECRET_KEY: 12345678
+#      MINIO_BUCKET: files
+#
+#      S3_ENDPOINT: http://minio:9000
+#      S3_ACCESS_KEY: user
+#      S3_SECRET_KEY: 12345678
+#      S3_BUCKET: files
+#
+#      AWS_ACCESS_KEY_ID: user
+#      AWS_SECRET_ACCESS_KEY: 12345678
+#    depends_on:
+#      - minio
+#      - authorization-service
+#      - user-service
+#    restart: unless-stopped
+#
+#  authorization-service:
+#    <<: *resources-microservice
+#    build:
+#      context: ./authorization-service
+#      dockerfile: Dockerfile
+#    container_name: authorization-service
+#    ports:
+#      - "8085:8080"
+#    environment:
+#      <<: *common-microservice-env
+#      SERVER_PORT: 8080
+#      SPRING_PROFILES_ACTIVE: docker
+#
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/authdatabase
+#      SPRING_DATASOURCE_USERNAME: user
+#      SPRING_DATASOURCE_PASSWORD: 1234
+#
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#    depends_on:
+#      - postgres-auth
+#      - kafka
+#    restart: unless-stopped
+#
+#  vitrina-service:
+#    <<: *resources-microservice
+#    build:
+#      context: ./vitrina-service
+#      dockerfile: Dockerfile
+#    container_name: vitrina-service
+#    ports:
+#      - "8086:8080"
+#    environment:
+#      <<: *common-microservice-env
+#      SERVER_PORT: 8080
+#      SPRING_PROFILES_ACTIVE: docker
+#
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-datamart:5432/data-mart
+#      SPRING_DATASOURCE_USERNAME: user
+#      SPRING_DATASOURCE_PASSWORD: 1234
+#      DEBEZIUM_API_URL: http://debezium-connect:8083/connectors
+#
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#    depends_on:
+#      - postgres-datamart
+#      - kafka
+#      - debezium-connect
+#    restart: unless-stopped
+#
+#  task-service:
+#    <<: *resources-microservice
+#    build:
+#      context: ./task-service
+#      dockerfile: Dockerfile
+#    container_name: task-service
+#    ports:
+#      - "8088:8080"
+#      - "5005:5005"
+#    environment:
+#      JAVA_TOOL_OPTIONS: >
+#        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+#      <<: *common-microservice-env
+#      SERVER_PORT: 8080
+#      SPRING_PROFILES_ACTIVE: docker
+#
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-task:5432/task-database
+#      SPRING_DATASOURCE_USERNAME: user
+#      SPRING_DATASOURCE_PASSWORD: 1234
+#      LLM_BASEURL: http://ollama:11434/v1
+#
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#    depends_on:
+#      - postgres-task
+#      - kafka
+#      - user-service
+#      - authorization-service
+#    restart: unless-stopped
+
+#  ollama:
+#    image: ollama/ollama:latest
+#    container_name: local-ollama
+#    ports:
+#      - "11434:11434"
+#    volumes:
+#      - ollama-data:/root/.ollama
+#    environment:
+#      - OLLAMA_KEEP_ALIVE=5m
+#      - OLLAMA_NUM_PARALLEL=1
+#      - OLLAMA_MAX_LOADED_MODELS=1
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 8g
+#    restart: unless-stopped
 
 
 
@@ -281,8 +560,8 @@ volumes:
   cassandra-init-flag:
   elasticsearch_data:
   minio-storage:
+  ollama-data:
 
 networks:
   cassandra_network:
     driver: bridge
-

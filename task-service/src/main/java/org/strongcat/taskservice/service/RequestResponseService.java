@@ -14,10 +14,13 @@ import org.strongcat.taskservice.data.repository.RequestRecipientRepository;
 import org.strongcat.taskservice.data.repository.RequestRepository;
 import org.strongcat.taskservice.data.repository.RequestStatusRepository;
 import org.strongcat.taskservice.data.repository.ResponseStatusRepository;
+import org.strongcat.taskservice.dto.SpecialistDecisionDto;
 import org.strongcat.taskservice.dto.internal.TaskRequestResponseNotificationDto;
+import org.strongcat.taskservice.validator.SpecialistDecisionValidator;
 
 import javax.naming.ServiceUnavailableException;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 
 @Slf4j
 @Service
@@ -29,30 +32,39 @@ public class RequestResponseService {
     private final RequestRepository requestRepository;
     private final RequestStatusRepository requestStatusRepository;
     private final MessagingClientService messagingClientService;
+    private final SpecialistDecisionValidator specialistDecisionValidator;
 
     @Transactional
-    public void acceptRequest(Long requestId, Long specialistExternalUserId) {
-        RequestRecipient recipient = changeResponseStatus(requestId, specialistExternalUserId, ResponseStatusName.ACCEPTED);
+    public void acceptRequest(Long requestId, SpecialistDecisionDto specialistDecisionDto) {
+        specialistDecisionValidator.validate(specialistDecisionDto);
+        RequestRecipient recipient = changeResponseStatus(requestId,
+                specialistDecisionDto.getSpecialistExternalUserId(),
+                ResponseStatusName.ACCEPTED);
         notifyTaskResponse(recipient, ResponseStatusName.ACCEPTED);
 
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Задача не найдена с id: " + requestId));
-        RequestStatus analyzingStatus = requestStatusRepository.findByName(RequestStatusName.ANALYZING.getDatabaseName())
-                .orElseThrow(() -> new IllegalStateException("Статус 'ANALYZING' не инициализирован в справочнике БД"));
+        RequestStatus analyzingStatus = requestStatusRepository.findByName(RequestStatusName.ACCEPTED.getDatabaseName())
+                .orElseThrow(() -> new IllegalStateException("Статус 'ACCEPTED' не инициализирован в справочнике БД"));
         request.setRequestStatus(analyzingStatus);
         requestRepository.save(request);
 
     }
 
     @Transactional
-    public void rejectRequest(Long requestId, Long specialistExternalUserId) {
-        RequestRecipient recipient = changeResponseStatus(requestId, specialistExternalUserId, ResponseStatusName.DECLINED);
+    public void rejectRequest(Long requestId, SpecialistDecisionDto specialistDecisionDto) {
+        specialistDecisionValidator.validate(specialistDecisionDto);
+        RequestRecipient recipient = changeResponseStatus(requestId,
+                specialistDecisionDto.getSpecialistExternalUserId(),
+                ResponseStatusName.DECLINED);
         notifyTaskResponse(recipient, ResponseStatusName.DECLINED);
     }
 
     @Transactional
-    public void completeRequest(Long requestId, Long specialistExternalUserId) {
-        Request request = requestRepository.findAcceptedRequestBySpecialist(requestId, specialistExternalUserId)
+    public void completeRequest(Long requestId, SpecialistDecisionDto specialistDecisionDto) {
+        specialistDecisionValidator.validate(specialistDecisionDto);
+        Request request = requestRepository.findAcceptedRequestBySpecialist(requestId,
+                        specialistDecisionDto.getSpecialistExternalUserId())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Не удалось завершить задачу. Задача с id " + requestId +
                                 " не найдена, либо вы не являетесь её утвержденным исполнителем."
@@ -69,6 +81,7 @@ public class RequestResponseService {
                                                   ResponseStatusName statusName) {
         RequestRecipient recipient = requestRecipientRepository
                 .findByRequestIdAndSpecialistExternalUserId(requestId, specialistExternalUserId)
+                .stream().findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Адресованный запрос не найден для задачи с id: " + requestId + " и специалиста: " +
                                 specialistExternalUserId

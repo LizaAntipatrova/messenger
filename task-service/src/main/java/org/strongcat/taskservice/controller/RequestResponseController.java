@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.strongcat.taskservice.dto.SpecialistDecisionDto;
 import org.strongcat.taskservice.service.RequestResponseService;
 import org.strongcat.taskservice.service.RequestService;
 
@@ -24,35 +25,34 @@ public class RequestResponseController {
     @GetMapping("/response-status/{user-id}")
     public ResponseEntity<String> getResponseStatus(
             @PathVariable("id") Long requestId,
-            @PathVariable("id") Long userId) {
-
-//        Long externalUserId = Long.parseLong(authentication.getName());
-        String status = requestService.getResponseStatus(requestId, userId);
+            Authentication authentication) {
+        Long externalUserId = Long.parseLong(authentication.getName());
+        String status = requestService.getResponseStatus(requestId, externalUserId);
         return ResponseEntity.ok(status);
     }
 
     @PostMapping("/accept")
     public ResponseEntity<Void> acceptRequest(@PathVariable("id") Long requestId, Authentication authentication) {
-        Long specialistExternalUserId = getExternalUserIdFromAuth(authentication);
+        SpecialistDecisionDto specialistDecisionDto = new SpecialistDecisionDto(getExternalUserIdFromAuth(authentication));
         
-        requestResponseService.acceptRequest(requestId, specialistExternalUserId);
+        requestResponseService.acceptRequest(requestId, specialistDecisionDto);
 
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/reject")
     public ResponseEntity<Void> rejectRequest(@PathVariable("id") Long requestId, Authentication authentication) {
-        Long specialistExternalUserId = getExternalUserIdFromAuth(authentication);
-        
-        requestResponseService.rejectRequest(requestId, specialistExternalUserId);
+        SpecialistDecisionDto specialistDecisionDto = new SpecialistDecisionDto(getExternalUserIdFromAuth(authentication));
+
+        requestResponseService.rejectRequest(requestId, specialistDecisionDto);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/complete")
     public ResponseEntity<Void> completeRequest(@PathVariable("id") Long requestId, Authentication authentication) {
-        Long specialistExternalUserId = getExternalUserIdFromAuth(authentication);
+        SpecialistDecisionDto specialistDecisionDto = new SpecialistDecisionDto(getExternalUserIdFromAuth(authentication));
 
-        requestResponseService.completeRequest(requestId, specialistExternalUserId);
+        requestResponseService.completeRequest(requestId, specialistDecisionDto);
         return ResponseEntity.ok().build();
     }
 

@@ -26,6 +26,10 @@ databaseChangeLog:
         - insert:
             tableName: request_status
             columns:
+              - column: { name: name, value: "ACCEPTED" }
+        - insert:
+            tableName: request_status
+            columns:
               - column: { name: name, value: "CANCELLED" }
         - insert:
             tableName: request_status

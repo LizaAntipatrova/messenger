@@ -14,6 +14,10 @@ java {
     }
 }
 
+bootJar {
+    archiveFileName = 'vitrina-service.jar'
+}
+
 repositories {
     mavenCentral()
 }

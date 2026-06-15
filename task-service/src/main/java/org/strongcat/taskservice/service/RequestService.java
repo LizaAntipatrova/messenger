@@ -11,12 +11,14 @@ import org.strongcat.taskservice.data.enums.RequestStatusName;
 import org.strongcat.taskservice.data.enums.ResponseStatusName;
 import org.strongcat.taskservice.data.repository.*;
 import org.strongcat.taskservice.dto.CreateRequestDto;
+import org.strongcat.taskservice.dto.internal.LlmTaskResponse;
 import org.strongcat.taskservice.dto.internal.TaskDistributionRecipientDto;
+import org.strongcat.taskservice.validator.CreateRequestValidator;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -32,9 +34,12 @@ public class RequestService {
     private final RequestRecipientRepository requestRecipientRepository;
     private final ResponseStatusRepository responseStatusRepository;
     private final RequestDistributionService requestDistributionService;
+    private final CreateRequestValidator createRequestValidator;
+    private final OpenAiService llmService;
 
     @Transactional
     public Long createRequest(CreateRequestDto dto, Long initiatorId) {
+        createRequestValidator.validate(dto);
         // 1. Находим специализацию
         Specialization specialization = specializationRepository.findById(dto.getSpecializationId())
                 .orElseThrow(() -> new IllegalArgumentException("Специализация не найдена с id: " + dto.getSpecializationId()));
@@ -53,11 +58,24 @@ public class RequestService {
         request.setExpectedDurationDays(dto.getExpectedDurationDays());
         request.setRequestStatus(defaultStatus);
 
-        Request savedRequest = requestRepository.save(request);
+        List<String> skillDict = skillRepository.findAll().stream().map(Skill::getName).toList();
+        LlmTaskResponse llmTaskResponse = llmService.analyzeTask(dto.getDescription(), skillDict);
+        if (dto.getRequiredExperience() == null) {
+            request.setRequiredExperience(llmTaskResponse.getRequiredExperienceMonths());
+        }
+        if (dto.getPayment() == null) {
+            request.setPayment(llmTaskResponse.getPayment());
+        }
+        if (dto.getExpectedDurationDays() == null) {
+            request.setExpectedDurationDays(llmTaskResponse.getExpectedDurationDays());
+        }
 
-        // 4. Сохраняем требуемые навыки задачи (веса по умолчанию = 1.0)
+
+        Request savedRequest = requestRepository.save(request);
+        Set<RequestSkill> requestSkills =  new HashSet<>();
+        // 4. Сохраняем требуемые навыки задачи (веса по умолчанию = 0.8)
         if (dto.getSkillIds() != null && !dto.getSkillIds().isEmpty()) {
-            List<RequestSkill> requestSkills = dto.getSkillIds().stream()
+            requestSkills = dto.getSkillIds().stream()
                     .map(skillId -> {
                         Skill skill = skillRepository.findById(skillId)
                                 .orElseThrow(() -> new IllegalArgumentException("Навык не найден с id: " + skillId));
@@ -65,15 +83,32 @@ public class RequestService {
                         RequestSkill requestSkill = new RequestSkill();
                         requestSkill.setRequest(savedRequest);
                         requestSkill.setSkill(skill);
-                        requestSkill.setSkillWeight(BigDecimal.ONE);
+                        requestSkill.setSkillWeight(new BigDecimal("0.8"));
                         return requestSkill;
-                    }).toList();
+                    }).collect(Collectors.toSet());
+        }
+        if (llmTaskResponse.getSkills() != null && !llmTaskResponse.getSkills().isEmpty()) {
+            requestSkills.addAll(llmTaskResponse.getSkills().stream()
+                    .map(llmSkill -> {
+                        Optional<Skill> skillOpt = skillRepository.findByName(llmSkill.getName());
+                        if (skillOpt.isEmpty()){
+                            return null;
+                        }
+                        Skill skill =skillOpt.get();
 
-            requestSkillRepository.saveAll(requestSkills);
+                        RequestSkill requestSkill = new RequestSkill();
+                        requestSkill.setRequest(savedRequest);
+                        requestSkill.setSkill(skill);
+                        requestSkill.setSkillWeight(llmSkill.getWeight());
+                        return requestSkill;
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
 
+        requestSkillRepository.saveAll(requestSkills);
+
+
         // 5. АВТОМАТИЧЕСКАЯ АДРЕСАЦИЯ: Запуск алгоритма ранжирования
-        List<RequestRecipient> bestCandidates = matchingService.findBestSpecialistsForRequest(savedRequest, dto.getSkillIds());
+        List<RequestRecipient> bestCandidates = matchingService.findBestSpecialistsForRequest(savedRequest, new ArrayList<>(requestSkills));
 
         if (bestCandidates.isEmpty()) {
             // Если жесткие фильтры или косинусная близость никого не пропустили,
@@ -139,6 +174,7 @@ public class RequestService {
     @Transactional(readOnly = true)
     public String getResponseStatus(Long requestId, Long externalUserId) {
         RequestRecipient recipient = requestRecipientRepository.findByRequestIdAndSpecialistExternalUserId(requestId, externalUserId)
+                .stream().findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(
                         String.format("Откликов для специалиста %d по задаче %d не найдено", externalUserId, requestId)
                 ));

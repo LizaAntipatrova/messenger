@@ -28,6 +28,7 @@ public class MessageStorageServiceClientImpl implements MessageStorageServiceCli
     public Map<Long, Object> getLastMessages(List<Long> chatIds) {
         String url = String.format(LAST_MESSAGES_IN_CHATS_URL_FORMAT, messageStorageServiceProperties.getUrl());
 
+        System.out.println(url);
         try {
             Map<String, Object> messages = userServiceWebClient.post()
                     .uri(url)

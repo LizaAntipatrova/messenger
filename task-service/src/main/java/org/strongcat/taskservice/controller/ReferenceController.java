@@ -1,6 +1,7 @@
 package org.strongcat.taskservice.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,7 +28,7 @@ public class ReferenceController {
 
     @GetMapping("/skills")
     public List<ReferenceItemDto> getSkills() {
-        return skillRepository.findAll().stream()
+        return skillRepository.findAll(Pageable.ofSize(20)).stream()
                 .map(item -> new ReferenceItemDto(item.getId(), item.getName()))
                 .toList();
     }

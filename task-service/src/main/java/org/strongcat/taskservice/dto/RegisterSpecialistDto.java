@@ -11,6 +11,7 @@ import java.util.List;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class RegisterSpecialistDto {
     private Long externalUserId;
+    private String description;
     private String specializationName;
     private Integer experienceMonths;
     private List<Long> skillIds;

@@ -66,6 +66,7 @@ public class UpdateProfileDataService {
                 .toList();
 
         RegisterSpecialistDto specialistDto = RegisterSpecialistDto.builder()
+                .description(user.getDescription())
                 .externalUserId(user.getId())
                 .specializationName(user.getSpecialization())
                 .experienceMonths(user.getExperience())

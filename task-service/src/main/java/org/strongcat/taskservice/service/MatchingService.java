@@ -20,11 +20,13 @@ public class MatchingService {
     private final SpecialistSkillRepository specialistSkillRepository;
     private final MatchingCalculator matchingCalculator;
     private final CorrectionFactorCalculator factorCalculator;
+    private static final BigDecimal MIN_SCORE = BigDecimal.valueOf(0.15);
+
 
     // Константа M — сколько максимум кандидатов мы хотим отобрать для адресации (из ТЗ вашей ВКР)
-    private static final int TOP_M_CANDIDATES = 5; 
+    private static final int TOP_M_CANDIDATES = 20;
 
-    public List<RequestRecipient> findBestSpecialistsForRequest(Request request, List<Long> requestSkillIds) {
+    public List<RequestRecipient> findBestSpecialistsForRequest(Request request, List<RequestSkill> requestSkills) {
         
         // 1. Выполняем жесткую предварительную фильтрацию (Hard Filters)
         List<Specialist> filteredSpecialists = specialistRepository.findPotentialCandidates(
@@ -52,10 +54,10 @@ public class MatchingService {
             List<SpecialistSkill> specialistSkills = skillsBySpecialist.getOrDefault(specialist.getId(), new ArrayList<>());
 
             // Рассчитываем косинусную близость (Шаг 2)
-            BigDecimal cosineSimilarity = matchingCalculator.calculateCosineSimilarity(requestSkillIds, specialistSkills);
+            BigDecimal cosineSimilarity = matchingCalculator.calculateCosineSimilarity(requestSkills, specialistSkills);
             
             // Если совпадений по навыкам вообще нет (0.0), сразу пропускаем кандидата
-            if (cosineSimilarity.compareTo(BigDecimal.ZERO) == 0) {
+            if (cosineSimilarity.compareTo(MIN_SCORE) < 0) {
                 continue;
             }
 

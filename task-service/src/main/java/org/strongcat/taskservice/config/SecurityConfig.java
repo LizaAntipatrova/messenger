@@ -2,6 +2,7 @@ package org.strongcat.taskservice.config;
 
 import com.yazikochesalna.common.filter.JwtFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;

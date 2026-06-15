@@ -1,11 +1,13 @@
 package org.strongcat.taskservice.service;
 
 import org.springframework.stereotype.Component;
+import org.strongcat.taskservice.data.entity.RequestSkill;
 import org.strongcat.taskservice.data.entity.SpecialistSkill;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -15,36 +17,58 @@ public class MatchingCalculator {
     // Используем MathContext для точных вычислений с BigDecimal (до 5 знаков после запятой)
     private static final MathContext MC = new MathContext(5);
 
-    public BigDecimal calculateCosineSimilarity(List<Long> requestSkillIds, List<SpecialistSkill> specialistSkills) {
-        if (requestSkillIds == null || requestSkillIds.isEmpty() || specialistSkills == null || specialistSkills.isEmpty()) {
+    public BigDecimal calculateCosineSimilarity(List<RequestSkill> requestSkills, List<SpecialistSkill> specialistSkills) {
+        if (requestSkills == null || requestSkills.isEmpty() || specialistSkills == null || specialistSkills.isEmpty()) {
             return BigDecimal.ZERO;
         }
 
-        // Множество ID навыков специалиста для быстрого поиска O(1)
-        Set<Long> specSkillIds = specialistSkills.stream()
-                .map(ss -> ss.getSkill().getId())
-                .collect(Collectors.toSet());
+        Map<Long, BigDecimal> requestVector = requestSkills.stream()
+                .collect(Collectors.toMap(
+                        rs -> rs.getSkill().getId(),
+                        RequestSkill::getSkillWeight,
+                        BigDecimal::max
+                ));
 
-        // 1. Скалярное произведение векторов (Dot Product)
-        // Так как веса у нас равны 1.0, совпадение — это просто +1 к сумме
-        long intersectionCount = requestSkillIds.stream()
-                .filter(specSkillIds::contains)
-                .count();
+        Map<Long, BigDecimal> specialistVector = specialistSkills.stream()
+                .collect(Collectors.toMap(
+                        ss -> ss.getSkill().getId(),
+                        SpecialistSkill::getSkillWeight,
+                        BigDecimal::max
+                ));
+        BigDecimal dotProduct = BigDecimal.ZERO;
 
-        if (intersectionCount == 0) {
+        for (Map.Entry<Long, BigDecimal> entry : requestVector.entrySet()) {
+            BigDecimal specialistWeight = specialistVector.get(entry.getKey());
+            if (specialistWeight != null) {
+                dotProduct = dotProduct.add(entry.getValue().multiply(specialistWeight));
+            }
+        }
+
+        if (dotProduct.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
 
-        // 2. Длина вектора задачи (норма вектора A)
-        // Квадратный корень из суммы квадратов координат. Координаты = 1, значит сумма = количеству навыков.
-        double normA = Math.sqrt(requestSkillIds.size());
+        BigDecimal requestNorm = sqrt(
+                requestVector.values().stream()
+                        .map(w -> w.multiply(w))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+        );
 
-        // 3. Длина вектора специалиста (норма вектора B)
-        double normB = Math.sqrt(specialistSkills.size());
+        BigDecimal specialistNorm = sqrt(
+                specialistVector.values().stream()
+                        .map(w -> w.multiply(w))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+        );
 
-        // 4. Итоговый расчет косинусной близости
-        double similarity = intersectionCount / (normA * normB);
+        if (requestNorm.compareTo(BigDecimal.ZERO) == 0
+                || specialistNorm.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
 
-        return new BigDecimal(similarity, MC);
+        return dotProduct.divide(requestNorm.multiply(specialistNorm), MC);
+    }
+
+    private BigDecimal sqrt(BigDecimal value) {
+        return BigDecimal.valueOf(Math.sqrt(value.doubleValue()));
     }
 }
